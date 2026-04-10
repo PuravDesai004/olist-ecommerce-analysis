@@ -20,25 +20,6 @@ Questions answered:
 
 ---
 
-## Repository Structure
-
-```
-olist-ecommerce-analysis/
-│
-├── sql/
-│   └── olist_queries.sql        
-│
-├── dashboard/
-│   └── olist_dashboard.pbix     
-│
-├── images/
-│   ├── overview_page.jpg        
-│   └── deep_dive_page.jpg       
-│
-└── README.md
-```
-
----
 
 ## Dataset
 
