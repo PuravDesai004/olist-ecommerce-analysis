@@ -53,7 +53,7 @@ Source: [Olist Brazilian E-Commerce — Kaggle](https://www.kaggle.com/datasets/
 ### Overview Page
 KPI cards, revenue by category, monthly order trend.
 
-![Overview](images/overview_page.jpg)
+![Overview](overview_page.jpg)
 
 Key numbers:
 - Total Revenue: 16.01M BRL
@@ -66,7 +66,7 @@ Key numbers:
 ### Deep Dive Page
 Payment breakdown, top 10 sellers, review scores by state, orders by state.
 
-![Deep Dive](images/deep_dive_page.jpg)
+![Deep Dive](deep_dive_page.jpg)
 
 ---
 
