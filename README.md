@@ -1,6 +1,6 @@
 # Olist E-Commerce Data Analysis
 
-End-to-end data analysis project on the Brazilian Olist e-commerce dataset.
+End to end data analysis project on the Brazilian Olist ecommerce dataset.
 100,000+ orders analyzed using PostgreSQL and Power BI.
 
 ---
@@ -77,7 +77,7 @@ Orders delivered early or on time average a review score of 4.2+, while orders
 delayed by 7+ days drop to 2.5 or below. Logistics performance is the biggest
 driver of customer satisfaction in this dataset, not product quality. Olist
 should implement delivery delay alerts for sellers and focus on improving
-last-mile logistics in states with the worst average delays.
+last mile logistics in states with the worst average delays.
 
 ### 2. Sao Paulo dominates but creates concentration risk
 SP accounts for 40,000+ orders — nearly 4x more than RJ in second place. Over
@@ -87,7 +87,7 @@ seller and customer base in MG, RS, and PR to reduce this geographic dependency.
 
 ### 3. Credit card dominates but boleto shows financial inclusion
 78.34% of payments are credit card, but boleto accounts for 17.92% (2.87M BRL).
-Boleto is used by customers who cannot access credit — this is not a small
+Boleto is used by customers who cannot access credit this is not a small
 segment. Olist should protect and expand boleto support as a strategic advantage
 for reaching Brazil's unbanked population.
 
