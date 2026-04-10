@@ -10,21 +10,21 @@
 -- beginner — single table, group by, basic filters
 -- ============================================================
 
--- 1. orders by status
+-- 1 orders by status
 SELECT status, COUNT(*) AS total_orders
 FROM orders
 GROUP BY status
 ORDER BY total_orders DESC;
 
 
--- 2. top 5 cities by customers
+-- 2 top 5 cities by customers
 SELECT city, COUNT(*) AS total
 FROM customers
 GROUP BY city
 ORDER BY total DESC LIMIT 5;
 
 
--- 3. revenue by payment type
+-- 3 revenue by payment type
 SELECT pay_type, COUNT(*) AS transactions,
 ROUND(SUM(pay_value)::NUMERIC, 2) AS total_revenue
 FROM order_payments
@@ -40,14 +40,14 @@ GROUP BY score
 ORDER BY score;
 
 
--- 5. seller count by state
+-- 5 seller count by state
 SELECT state, COUNT(*) AS total_sellers
 FROM sellers
 GROUP BY state
 ORDER BY total_sellers DESC;
 
 
--- 6. orders not delivered
+-- 6 orders not delivered
 SELECT status, COUNT(*) AS total
 FROM orders
 WHERE status != 'delivered'
@@ -55,7 +55,7 @@ GROUP BY status
 ORDER BY total DESC;
 
 
--- 7. avg installments by payment type
+-- 7 avg installments by payment type
 SELECT pay_type,
 ROUND(AVG(installments)::NUMERIC, 2) AS avg_installments,
 MAX(installments) AS max_installments
@@ -64,7 +64,7 @@ GROUP BY pay_type
 ORDER BY avg_installments DESC;
 
 
--- 8. total orders and revenue by year
+-- 8 total orders and revenue by year
 SELECT EXTRACT(YEAR FROM purchase_time) AS year,
 COUNT(*) AS total_orders,
 ROUND(SUM(op.pay_value)::NUMERIC, 2) AS total_revenue
@@ -78,7 +78,7 @@ ORDER BY year;
 -- intermediate — joins, having, multi-table
 -- ============================================================
 
--- 1. top 10 expensive categories
+-- 1 top 10 expensive categories
 SELECT p.category,
 ROUND(AVG(oi.price)::NUMERIC, 2) AS avg_price
 FROM order_items oi
@@ -87,7 +87,7 @@ GROUP BY p.category
 ORDER BY avg_price DESC LIMIT 10;
 
 
--- 2. total revenue per product category (english names)
+-- 2 total revenue per product category (english names)
 SELECT ct.category_english,
 ROUND(SUM(oi.price)::NUMERIC, 2) AS total_revenue,
 COUNT(DISTINCT oi.order_id) AS total_orders
@@ -98,7 +98,7 @@ GROUP BY ct.category_english
 ORDER BY total_revenue DESC LIMIT 15;
 
 
--- 3. top 10 sellers by number of orders
+-- 3 top 10 sellers by number of orders
 SELECT oi.seller_id, s.city, s.state,
 COUNT(DISTINCT oi.order_id) AS total_orders,
 ROUND(SUM(oi.price)::NUMERIC, 2) AS total_revenue
@@ -108,7 +108,7 @@ GROUP BY oi.seller_id, s.city, s.state
 ORDER BY total_orders DESC LIMIT 10;
 
 
--- 4. average order value by customer state
+-- 4 average order value by customer state
 SELECT c.state,
 COUNT(DISTINCT o.order_id) AS total_orders,
 ROUND(AVG(op.pay_value)::NUMERIC, 2) AS avg_order_value,
@@ -120,7 +120,7 @@ GROUP BY c.state
 ORDER BY total_spent DESC;
 
 
--- 5. count of orders per status with percentage
+-- 5 count of orders per status with percentage
 SELECT status, COUNT(*) AS total,
 ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) AS pct
 FROM orders
@@ -128,7 +128,7 @@ GROUP BY status
 ORDER BY total DESC;
 
 
--- 6. revenue by payment type with percentage
+-- 6 revenue by payment type with percentage
 SELECT pay_type, COUNT(*) AS transactions,
 ROUND(SUM(pay_value)::NUMERIC, 2) AS total_revenue,
 ROUND(AVG(pay_value)::NUMERIC, 2) AS avg_payment,
@@ -138,7 +138,7 @@ GROUP BY pay_type
 ORDER BY total_revenue DESC;
 
 
--- 7. avg freight vs price by category
+-- 7 avg freight vs price by category
 SELECT ct.category_english,
 ROUND(AVG(oi.price)::NUMERIC, 2) AS avg_price,
 ROUND(AVG(oi.freight)::NUMERIC, 2) AS avg_freight,
@@ -150,7 +150,7 @@ GROUP BY ct.category_english
 ORDER BY freight_pct DESC LIMIT 15;
 
 
--- 8. orders with more than 3 items
+-- 8 orders with more than 3 items
 SELECT order_id, COUNT(item_id) AS item_count,
 ROUND(SUM(price)::NUMERIC, 2) AS order_total
 FROM order_items
@@ -159,7 +159,7 @@ HAVING COUNT(item_id) > 3
 ORDER BY item_count DESC;
 
 
--- 9. customers who placed more than 1 order
+-- 9 customers who placed more than 1 order
 SELECT c.cust_id, c.city, c.state,
 COUNT(o.order_id) AS order_count,
 ROUND(SUM(op.pay_value)::NUMERIC, 2) AS total_spent
@@ -171,7 +171,7 @@ HAVING COUNT(o.order_id) > 1
 ORDER BY order_count DESC;
 
 
--- 10. monthly order count and revenue trend
+-- 10 monthly order count and revenue trend
 SELECT DATE_TRUNC('month', purchase_time) AS month,
 COUNT(*) AS order_count,
 ROUND(SUM(op.pay_value)::NUMERIC, 2) AS monthly_revenue
@@ -181,7 +181,7 @@ GROUP BY DATE_TRUNC('month', purchase_time)
 ORDER BY month;
 
 
--- 11. top 5 categories by avg review score
+-- 11 top 5 categories by avg review score
 SELECT ct.category_english,
 ROUND(AVG(r.score)::NUMERIC, 2) AS avg_score,
 COUNT(r.review_id) AS total_reviews
@@ -194,7 +194,7 @@ HAVING COUNT(r.review_id) > 100
 ORDER BY avg_score DESC LIMIT 5;
 
 
--- 12. delivery delay in days per order
+-- 12 delivery delay in days per order
 SELECT order_id,
 EXTRACT(DAY FROM delivered_date - purchase_time) AS delivery_days,
 EXTRACT(DAY FROM estimated_date - purchase_time) AS estimated_days,
@@ -203,7 +203,7 @@ FROM orders
 WHERE delivered_date IS NOT NULL LIMIT 20;
 
 
--- 13. avg delivery delay by customer state
+-- 13 avg delivery delay by customer state
 SELECT c.state,
 ROUND(AVG(EXTRACT(DAY FROM o.delivered_date - o.estimated_date))::NUMERIC, 2) AS avg_delay_days
 FROM orders o
@@ -213,14 +213,14 @@ GROUP BY c.state
 ORDER BY avg_delay_days DESC;
 
 
--- 14. products never ordered
+-- 14 products never ordered
 SELECT p.prod_id, p.category
 FROM products p
 LEFT JOIN order_items oi ON p.prod_id = oi.prod_id
 WHERE oi.prod_id IS NULL;
 
 
--- 15. correlation between delay and review score
+-- 15 correlation between delay and review score
 SELECT
 CASE
     WHEN EXTRACT(DAY FROM o.delivered_date - o.estimated_date) < 0 THEN 'early'
@@ -241,7 +241,7 @@ ORDER BY avg_review DESC;
 -- advanced — ctes, window functions, subqueries
 -- ============================================================
 
--- 1. rfm segmentation per customer
+-- 1 rfm segmentation per customer
 WITH rfm AS (
     SELECT o.cust_id,
         MAX(o.purchase_time) AS last_order,
@@ -258,7 +258,7 @@ FROM rfm
 ORDER BY monetary DESC LIMIT 20;
 
 
--- 2. rank sellers by monthly revenue
+-- 2 rank sellers by monthly revenue
 SELECT oi.seller_id,
     DATE_TRUNC('month', o.purchase_time) AS month,
     ROUND(SUM(oi.price)::NUMERIC, 2) AS revenue,
@@ -272,7 +272,7 @@ GROUP BY oi.seller_id, DATE_TRUNC('month', o.purchase_time)
 ORDER BY month, rank_in_month LIMIT 30;
 
 
--- 3. month-over-month revenue growth using lag()
+-- 3 month-over-month revenue growth using lag()
 WITH monthly AS (
     SELECT DATE_TRUNC('month', o.purchase_time) AS month,
         ROUND(SUM(op.pay_value)::NUMERIC, 2) AS revenue
@@ -288,7 +288,7 @@ FROM monthly
 ORDER BY month;
 
 
--- 4. running total of orders each month
+-- 4 running total of orders each month
 SELECT DATE_TRUNC('month', purchase_time) AS month,
     COUNT(*) AS orders_this_month,
     SUM(COUNT(*)) OVER (ORDER BY DATE_TRUNC('month', purchase_time)) AS running_total
@@ -297,7 +297,7 @@ GROUP BY DATE_TRUNC('month', purchase_time)
 ORDER BY month;
 
 
--- 5. top 3 products per category by total sales
+-- 5 top 3 products per category by total sales
 WITH ranked AS (
     SELECT ct.category_english, oi.prod_id,
         ROUND(SUM(oi.price)::NUMERIC, 2) AS total_sales,
@@ -315,7 +315,7 @@ WHERE rank_in_cat <= 3
 ORDER BY category_english, rank_in_cat;
 
 
--- 6. flag customers as repeat or one-time
+-- 6 flag customers as repeat or one-time
 SELECT cust_id, total_orders,
     CASE WHEN total_orders > 1 THEN 'repeat'
          ELSE 'one-time' END AS customer_type
