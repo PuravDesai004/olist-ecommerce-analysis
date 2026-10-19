@@ -1,326 +1,368 @@
--- ============================================================
--- olist dataset analysis — sql queries
--- author: purav desai | scet surat | b.tech it
--- database: postgresql | db: olist
--- total queries: 29 (8 beginner + 15 intermediate + 6 advanced)
--- ============================================================
+-- Olist 2.0 | PostgreSQL analysis | database: olist2
+-- Prerequisite: sql/05_reporting_views.sql. Sources remain unchanged.
+-- Original 29 queries are individually audited from Git by scripts/run_project.py.
+-- Consolidations: B1+B6+I5 -> Q01; B3+I6 -> Q03. Other original analyses retained.
+-- Nominal BRL: item sales=price, freight and payments are separate. All statuses
+-- unless stated. No profit inferred; review/delivery associations are not causal.
+BEGIN TRANSACTION READ ONLY;
 
+-- Q01 | Order status mix and non-delivered states
+-- Legacy: B1,B6,I5. One row/status; denominator all orders.
+SELECT order_status, order_status = 'delivered' AS is_delivered, COUNT(*) AS total_orders,
+ ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS pct_all_orders
+FROM public.orders GROUP BY order_status ORDER BY total_orders DESC, order_status;
 
--- ============================================================
--- beginner — single table, group by, basic filters
--- ============================================================
+-- Q02 | Top customer cities, distinguishing states
+-- Legacy: B2. Customer records and distinct people are separate measures.
+SELECT customer_city, customer_state, COUNT(*) AS customer_records,
+ COUNT(DISTINCT customer_unique_id) AS unique_people
+FROM public.customers GROUP BY customer_city, customer_state
+ORDER BY customer_records DESC, customer_state, customer_city LIMIT 5;
 
--- 1 orders by status
-SELECT status, COUNT(*) AS total_orders
-FROM orders
-GROUP BY status
-ORDER BY total_orders DESC;
+-- Q03 | Payment-method transaction and amount contribution
+-- Legacy: B3,I6. Method order counts overlap for multi-method orders.
+SELECT payment_type, COUNT(*) AS payment_transactions,
+ COUNT(DISTINCT order_id) AS orders_using_method,
+ ROUND(SUM(payment_value), 2) AS payment_value_brl,
+ ROUND(AVG(payment_value), 2) AS avg_transaction_value_brl,
+ ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS transaction_share_pct,
+ ROUND(100.0 * SUM(payment_value) / NULLIF(SUM(SUM(payment_value)) OVER (), 0), 2)
+   AS payment_value_share_pct
+FROM public.order_payments GROUP BY payment_type ORDER BY payment_value_brl DESC;
 
+-- Q04 | Source review-record distribution
+-- Legacy: B4. Repeated IDs retained; denominator source review rows.
+SELECT review_score, COUNT(*) AS review_records,
+ ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS pct_review_records
+FROM public.order_reviews GROUP BY review_score ORDER BY review_score;
 
--- 2 top 5 cities by customers
-SELECT city, COUNT(*) AS total
-FROM customers
-GROUP BY city
-ORDER BY total DESC LIMIT 5;
+-- Q05 | Seller geographic footprint
+-- Legacy: B5. Registered source sellers, not seller-order participations.
+SELECT seller_state, COUNT(*) AS sellers FROM public.sellers
+GROUP BY seller_state ORDER BY sellers DESC, seller_state;
 
+-- Q06 | Installments by payment method
+-- Legacy: B7. Unweighted transaction means; zero installment values preserved.
+SELECT payment_type, COUNT(*) AS payment_rows,
+ ROUND(AVG(payment_installments), 2) AS avg_installments,
+ MAX(payment_installments) AS max_installments,
+ COUNT(*) FILTER (WHERE payment_installments = 0) AS zero_installment_rows
+FROM public.order_payments GROUP BY payment_type ORDER BY avg_installments DESC;
 
--- 3 revenue by payment type
-SELECT pay_type, COUNT(*) AS transactions,
-ROUND(SUM(pay_value)::NUMERIC, 2) AS total_revenue
-FROM order_payments
-GROUP BY pay_type
-ORDER BY total_revenue DESC;
+-- Q07 | Annual orders, item sales, freight and payments
+-- Legacy: B8. One row/year; parent grain prevents payment-row count inflation.
+SELECT EXTRACT(YEAR FROM purchase_date)::int AS year, COUNT(*) AS orders,
+ COUNT(*) FILTER (WHERE has_payment) AS orders_with_payment,
+ ROUND(SUM(item_sales_brl), 2) AS item_sales_brl,
+ ROUND(SUM(freight_brl), 2) AS freight_brl,
+ ROUND(SUM(payment_value_brl), 2) AS payment_value_brl
+FROM olist_analytics.v_orders GROUP BY year ORDER BY year;
 
+-- Q08 | Categories with highest mean item price
+-- Legacy: I1. Item-weighted mean, sample size shown, unknown categories retained.
+SELECT c.category_key, c.category_label, COUNT(*) AS item_rows,
+ ROUND(AVG(i.price), 2) AS avg_item_price_brl
+FROM olist_analytics.v_items i JOIN olist_analytics.v_categories c USING (category_key)
+GROUP BY c.category_key, c.category_label
+ORDER BY avg_item_price_brl DESC, c.category_key LIMIT 10;
 
--- 4. review score distribution
-SELECT score, COUNT(*) AS total,
-ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) AS pct
-FROM order_reviews
-GROUP BY score
-ORDER BY score;
+-- Q09 | Category sales and contribution
+-- Legacy: I2. All source categories, including unmapped/null; order counts overlap.
+SELECT c.category_key, c.category_label, COUNT(*) AS item_rows,
+ COUNT(DISTINCT i.order_id) AS category_orders, ROUND(SUM(i.price), 2) AS item_sales_brl,
+ ROUND(100.0 * SUM(i.price) / NULLIF(SUM(SUM(i.price)) OVER (), 0), 2) AS sales_share_pct
+FROM olist_analytics.v_items i JOIN olist_analytics.v_categories c USING (category_key)
+GROUP BY c.category_key, c.category_label ORDER BY item_sales_brl DESC, c.category_key;
 
+-- Q10 | Top sellers by distinct order volume
+-- Legacy: I3. Seller item sales are not allocated customer payments.
+SELECT seller_id, seller_city, seller_state, seller_orders, item_rows,
+ ROUND(item_sales_brl, 2) AS item_sales_brl
+FROM olist_analytics.v_seller_scorecard ORDER BY seller_orders DESC, seller_id LIMIT 10;
 
--- 5 seller count by state
-SELECT state, COUNT(*) AS total_sellers
-FROM sellers
-GROUP BY state
-ORDER BY total_sellers DESC;
+-- Q11 | Customer-state payment value and order AOV
+-- Legacy: I4. Denominator: orders with payment records, including zero amounts.
+SELECT customer_state, COUNT(*) AS total_orders,
+ COUNT(*) FILTER (WHERE has_payment) AS orders_with_payment,
+ ROUND(SUM(payment_value_brl), 2) AS payment_value_brl,
+ ROUND(SUM(item_sales_brl), 2) AS item_sales_brl,
+ ROUND(SUM(payment_value_brl) / NULLIF(COUNT(*) FILTER (WHERE has_payment), 0), 2) AS aov_brl
+FROM olist_analytics.v_orders GROUP BY customer_state
+ORDER BY payment_value_brl DESC, customer_state;
 
+-- Q12 | Category freight burden
+-- Legacy: I7. Ratio of totals, not unweighted mean of per-item ratios.
+SELECT c.category_key, c.category_label, COUNT(*) AS item_rows,
+ ROUND(AVG(i.price), 2) AS avg_item_price_brl,
+ ROUND(AVG(i.freight_value), 2) AS avg_item_freight_brl,
+ ROUND(100.0 * SUM(i.freight_value) / NULLIF(SUM(i.price), 0), 2) AS freight_to_sales_pct
+FROM olist_analytics.v_items i JOIN olist_analytics.v_categories c USING (category_key)
+GROUP BY c.category_key, c.category_label ORDER BY freight_to_sales_pct DESC;
 
--- 6 orders not delivered
-SELECT status, COUNT(*) AS total
-FROM orders
-WHERE status != 'delivered'
-GROUP BY status
-ORDER BY total DESC;
+-- Q13 | Orders with more than three items
+-- Legacy: I8. Source item rows are the available item unit; no quantity column.
+SELECT order_id, item_rows, ROUND(item_sales_brl, 2) AS item_sales_brl,
+ ROUND(freight_brl, 2) AS freight_brl FROM olist_analytics.v_orders
+WHERE item_rows > 3 ORDER BY item_rows DESC, order_id;
 
+-- Q14 | Returning people and payment value
+-- Legacy: I9. Person grain; location changes must not split people.
+SELECT customer_unique_id, lifetime_orders,
+ ROUND(lifetime_payment_value_brl, 2) AS payment_value_brl
+FROM olist_analytics.v_customers WHERE is_repeat_customer
+ORDER BY lifetime_orders DESC, customer_unique_id;
 
--- 7 avg installments by payment type
-SELECT pay_type,
-ROUND(AVG(installments)::NUMERIC, 2) AS avg_installments,
-MAX(installments) AS max_installments
-FROM order_payments
-GROUP BY pay_type
-ORDER BY avg_installments DESC;
+-- Q15 | Monthly orders and financial trends
+-- Legacy: I10. Purchase-month attribution, internal gaps filled; boundary months flagged.
+SELECT month, total_orders, orders_with_payment, ROUND(item_sales_brl, 2) AS item_sales_brl,
+ ROUND(freight_brl, 2) AS freight_brl, ROUND(payment_value_brl, 2) AS payment_value_brl,
+ ROUND(aov_brl, 2) AS aov_brl, is_boundary_month
+FROM olist_analytics.v_monthly ORDER BY month;
 
+-- Q16 | Category review association, equal weight per reviewed order-category
+-- Legacy: I11. Unique order-category pairs; multi-category orders are shared.
+SELECT c.category_key, c.category_label, COUNT(*) AS reviewed_category_orders,
+ ROUND(AVG(o.avg_order_review_score), 2) AS avg_order_review_score
+FROM olist_analytics.v_category_orders o JOIN olist_analytics.v_categories c USING (category_key)
+WHERE o.avg_order_review_score IS NOT NULL GROUP BY c.category_key, c.category_label
+HAVING COUNT(*) > 100 ORDER BY avg_order_review_score DESC, c.category_key LIMIT 5;
 
--- 8 total orders and revenue by year
-SELECT EXTRACT(YEAR FROM purchase_time) AS year,
-COUNT(*) AS total_orders,
-ROUND(SUM(op.pay_value)::NUMERIC, 2) AS total_revenue
-FROM orders o
-JOIN order_payments op ON o.order_id = op.order_id
-GROUP BY EXTRACT(YEAR FROM purchase_time)
-ORDER BY year;
+-- Q17 | Actual, estimated and late delivery durations
+-- Legacy: I12. Valid delivered orders; fractional elapsed days; deterministic sample.
+SELECT order_id, ROUND(delivery_days, 2) AS actual_delivery_days,
+ ROUND(EXTRACT(EPOCH FROM (order_estimated_delivery_date
+   - order_purchase_timestamp)) / 86400.0, 2) AS estimated_delivery_days,
+ ROUND(delay_days, 2) AS signed_delay_days, is_late
+FROM olist_analytics.v_orders WHERE eligible_delivery
+ORDER BY order_purchase_timestamp, order_id LIMIT 20;
 
+-- Q18 | Regional delivery reliability
+-- Legacy: I13. Eligible delivered denominator; signed and late-only means distinguished.
+SELECT customer_state, COUNT(*) AS eligible_deliveries,
+ COUNT(*) FILTER (WHERE is_late) AS late_orders,
+ ROUND(100.0 * COUNT(*) FILTER (WHERE is_late) / COUNT(*), 2) AS late_rate_pct,
+ ROUND(AVG(delivery_days), 2) AS avg_delivery_days,
+ ROUND(AVG(delay_days), 2) AS avg_signed_delay_days,
+ ROUND(AVG(delay_days) FILTER (WHERE is_late), 2) AS avg_late_delay_days
+FROM olist_analytics.v_orders WHERE eligible_delivery GROUP BY customer_state
+ORDER BY late_rate_pct DESC, customer_state;
 
--- ============================================================
--- intermediate — joins, having, multi-table
--- ============================================================
+-- Q19 | Products never present in order_items
+-- Legacy: I14. Empty result valid; NULL categories do not disqualify products.
+SELECT p.product_id, p.product_category_name FROM public.products p
+WHERE NOT EXISTS (SELECT 1 FROM public.order_items i WHERE i.product_id = p.product_id)
+ORDER BY p.product_id;
 
--- 1 top 10 expensive categories
-SELECT p.category,
-ROUND(AVG(oi.price)::NUMERIC, 2) AS avg_price
-FROM order_items oi
-JOIN products p ON oi.prod_id = p.prod_id
-GROUP BY p.category
-ORDER BY avg_price DESC LIMIT 10;
-
-
--- 2 total revenue per product category (english names)
-SELECT ct.category_english,
-ROUND(SUM(oi.price)::NUMERIC, 2) AS total_revenue,
-COUNT(DISTINCT oi.order_id) AS total_orders
-FROM order_items oi
-JOIN products p ON oi.prod_id = p.prod_id
-JOIN cat_trans ct ON p.category = ct.category
-GROUP BY ct.category_english
-ORDER BY total_revenue DESC LIMIT 15;
-
-
--- 3 top 10 sellers by number of orders
-SELECT oi.seller_id, s.city, s.state,
-COUNT(DISTINCT oi.order_id) AS total_orders,
-ROUND(SUM(oi.price)::NUMERIC, 2) AS total_revenue
-FROM order_items oi
-JOIN sellers s ON oi.seller_id = s.seller_id
-GROUP BY oi.seller_id, s.city, s.state
-ORDER BY total_orders DESC LIMIT 10;
-
-
--- 4 average order value by customer state
-SELECT c.state,
-COUNT(DISTINCT o.order_id) AS total_orders,
-ROUND(AVG(op.pay_value)::NUMERIC, 2) AS avg_order_value,
-ROUND(SUM(op.pay_value)::NUMERIC, 2) AS total_spent
-FROM customers c
-JOIN orders o ON c.cust_id = o.cust_id
-JOIN order_payments op ON o.order_id = op.order_id
-GROUP BY c.state
-ORDER BY total_spent DESC;
-
-
--- 5 count of orders per status with percentage
-SELECT status, COUNT(*) AS total,
-ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) AS pct
-FROM orders
-GROUP BY status
-ORDER BY total DESC;
-
-
--- 6 revenue by payment type with percentage
-SELECT pay_type, COUNT(*) AS transactions,
-ROUND(SUM(pay_value)::NUMERIC, 2) AS total_revenue,
-ROUND(AVG(pay_value)::NUMERIC, 2) AS avg_payment,
-ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) AS pct
-FROM order_payments
-GROUP BY pay_type
-ORDER BY total_revenue DESC;
-
-
--- 7 avg freight vs price by category
-SELECT ct.category_english,
-ROUND(AVG(oi.price)::NUMERIC, 2) AS avg_price,
-ROUND(AVG(oi.freight)::NUMERIC, 2) AS avg_freight,
-ROUND((AVG(oi.freight) * 100.0 / AVG(oi.price))::NUMERIC, 2) AS freight_pct
-FROM order_items oi
-JOIN products p ON oi.prod_id = p.prod_id
-JOIN cat_trans ct ON p.category = ct.category
-GROUP BY ct.category_english
-ORDER BY freight_pct DESC LIMIT 15;
-
-
--- 8 orders with more than 3 items
-SELECT order_id, COUNT(item_id) AS item_count,
-ROUND(SUM(price)::NUMERIC, 2) AS order_total
-FROM order_items
-GROUP BY order_id
-HAVING COUNT(item_id) > 3
-ORDER BY item_count DESC;
-
-
--- 9 customers who placed more than 1 order
-SELECT c.cust_id, c.city, c.state,
-COUNT(o.order_id) AS order_count,
-ROUND(SUM(op.pay_value)::NUMERIC, 2) AS total_spent
-FROM customers c
-JOIN orders o ON c.cust_id = o.cust_id
-JOIN order_payments op ON o.order_id = op.order_id
-GROUP BY c.cust_id, c.city, c.state
-HAVING COUNT(o.order_id) > 1
-ORDER BY order_count DESC;
-
-
--- 10 monthly order count and revenue trend
-SELECT DATE_TRUNC('month', purchase_time) AS month,
-COUNT(*) AS order_count,
-ROUND(SUM(op.pay_value)::NUMERIC, 2) AS monthly_revenue
-FROM orders o
-JOIN order_payments op ON o.order_id = op.order_id
-GROUP BY DATE_TRUNC('month', purchase_time)
-ORDER BY month;
-
-
--- 11 top 5 categories by avg review score
-SELECT ct.category_english,
-ROUND(AVG(r.score)::NUMERIC, 2) AS avg_score,
-COUNT(r.review_id) AS total_reviews
-FROM order_reviews r
-JOIN order_items oi ON r.order_id = oi.order_id
-JOIN products p ON oi.prod_id = p.prod_id
-JOIN cat_trans ct ON p.category = ct.category
-GROUP BY ct.category_english
-HAVING COUNT(r.review_id) > 100
-ORDER BY avg_score DESC LIMIT 5;
-
-
--- 12 delivery delay in days per order
-SELECT order_id,
-EXTRACT(DAY FROM delivered_date - purchase_time) AS delivery_days,
-EXTRACT(DAY FROM estimated_date - purchase_time) AS estimated_days,
-EXTRACT(DAY FROM delivered_date - estimated_date) AS delay_days
-FROM orders
-WHERE delivered_date IS NOT NULL LIMIT 20;
-
-
--- 13 avg delivery delay by customer state
-SELECT c.state,
-ROUND(AVG(EXTRACT(DAY FROM o.delivered_date - o.estimated_date))::NUMERIC, 2) AS avg_delay_days
-FROM orders o
-JOIN customers c ON o.cust_id = c.cust_id
-WHERE o.delivered_date IS NOT NULL
-GROUP BY c.state
-ORDER BY avg_delay_days DESC;
-
-
--- 14 products never ordered
-SELECT p.prod_id, p.category
-FROM products p
-LEFT JOIN order_items oi ON p.prod_id = oi.prod_id
-WHERE oi.prod_id IS NULL;
-
-
--- 15 correlation between delay and review score
-SELECT
-CASE
-    WHEN EXTRACT(DAY FROM o.delivered_date - o.estimated_date) < 0 THEN 'early'
-    WHEN EXTRACT(DAY FROM o.delivered_date - o.estimated_date) = 0 THEN 'on time'
-    WHEN EXTRACT(DAY FROM o.delivered_date - o.estimated_date) <= 7 THEN 'late 1-7 days'
-    ELSE 'late 7+ days'
-END AS delivery_status,
-ROUND(AVG(r.score)::NUMERIC, 2) AS avg_review,
-COUNT(*) AS total_orders
-FROM orders o
-JOIN order_reviews r ON o.order_id = r.order_id
-WHERE o.delivered_date IS NOT NULL
-GROUP BY delivery_status
-ORDER BY avg_review DESC;
-
-
--- ============================================================
--- advanced — ctes, window functions, subqueries
--- ============================================================
-
--- 1 rfm segmentation per customer
-WITH rfm AS (
-    SELECT o.cust_id,
-        MAX(o.purchase_time) AS last_order,
-        COUNT(o.order_id) AS frequency,
-        ROUND(SUM(op.pay_value)::NUMERIC, 2) AS monetary
-    FROM orders o
-    JOIN order_payments op ON o.order_id = op.order_id
-    GROUP BY o.cust_id
+-- Q20 | Delivery timing and reviews: association, not causation
+-- Legacy: I15. One eligible order per row; equal-order review weighting.
+WITH buckets AS (
+ SELECT *, CASE WHEN delay_days < 0 THEN 'Early'
+   WHEN delay_days = 0 THEN 'Exactly estimate'
+   WHEN delay_days <= 7 THEN 'Late >0 to 7 days' ELSE 'Late >7 days' END AS delivery_bucket
+ FROM olist_analytics.v_orders WHERE eligible_delivery
 )
-SELECT cust_id,
-    CURRENT_DATE - last_order::DATE AS recency_days,
-    frequency, monetary
-FROM rfm
-ORDER BY monetary DESC LIMIT 20;
+SELECT delivery_bucket, COUNT(*) AS delivered_orders,
+ COUNT(avg_order_review_score) AS reviewed_orders,
+ ROUND(AVG(avg_order_review_score), 2) AS avg_order_review_score,
+ ROUND(AVG(delivery_days), 2) AS avg_delivery_days
+FROM buckets GROUP BY delivery_bucket ORDER BY delivered_orders DESC;
 
+-- Q21 | Historical RFM customer segmentation
+-- Legacy: A1. Fixed purchase cutoff; delivered snapshot is not historical status reconstruction.
+SELECT customer_unique_id, reference_date, last_purchase_date, recency_days, frequency,
+ ROUND(monetary_brl, 2) AS monetary_brl, r_score, f_score, m_score, segment
+FROM olist_analytics.v_rfm ORDER BY monetary_brl DESC, customer_unique_id;
 
--- 2 rank sellers by monthly revenue
-SELECT oi.seller_id,
-    DATE_TRUNC('month', o.purchase_time) AS month,
-    ROUND(SUM(oi.price)::NUMERIC, 2) AS revenue,
-    RANK() OVER (
-        PARTITION BY DATE_TRUNC('month', o.purchase_time)
-        ORDER BY SUM(oi.price) DESC
-    ) AS rank_in_month
-FROM order_items oi
-JOIN orders o ON oi.order_id = o.order_id
-GROUP BY oi.seller_id, DATE_TRUNC('month', o.purchase_time)
-ORDER BY month, rank_in_month LIMIT 30;
-
-
--- 3 month-over-month revenue growth using lag()
-WITH monthly AS (
-    SELECT DATE_TRUNC('month', o.purchase_time) AS month,
-        ROUND(SUM(op.pay_value)::NUMERIC, 2) AS revenue
-    FROM orders o
-    JOIN order_payments op ON o.order_id = op.order_id
-    GROUP BY DATE_TRUNC('month', o.purchase_time)
+-- Q22 | Seller ranks per purchase month with genuine sales ties
+-- Legacy: A2. Competition ranks <=3 may contain more than three sellers.
+WITH sales AS (
+ SELECT purchase_month, seller_id, SUM(seller_item_sales_brl) AS sales
+ FROM olist_analytics.v_seller_orders GROUP BY purchase_month, seller_id
+), ranked AS (
+ SELECT *, RANK() OVER (PARTITION BY purchase_month ORDER BY sales DESC) AS seller_rank
+ FROM sales
 )
-SELECT month, revenue,
-    LAG(revenue) OVER (ORDER BY month) AS prev_month_revenue,
-    ROUND((revenue - LAG(revenue) OVER (ORDER BY month))
-        / LAG(revenue) OVER (ORDER BY month) * 100, 2) AS growth_pct
-FROM monthly
-ORDER BY month;
+SELECT purchase_month, seller_id, ROUND(sales, 2) AS item_sales_brl, seller_rank
+FROM ranked WHERE seller_rank <= 3 ORDER BY purchase_month, seller_rank, seller_id;
 
+-- Q23 | Month-over-month item sales growth
+-- Legacy: A3. Previous calendar month; first/zero denominator growth remains NULL.
+SELECT month, ROUND(item_sales_brl, 2) AS item_sales_brl,
+ ROUND(previous_item_sales_brl, 2) AS previous_item_sales_brl,
+ ROUND(item_sales_growth_pct, 2) AS growth_pct, is_boundary_month
+FROM olist_analytics.v_monthly ORDER BY month;
 
--- 4 running total of orders each month
-SELECT DATE_TRUNC('month', purchase_time) AS month,
-    COUNT(*) AS orders_this_month,
-    SUM(COUNT(*)) OVER (ORDER BY DATE_TRUNC('month', purchase_time)) AS running_total
-FROM orders
-GROUP BY DATE_TRUNC('month', purchase_time)
-ORDER BY month;
+-- Q24 | Monthly orders and running order total
+-- Legacy: A4. Explicit ROWS window; every order counted once.
+SELECT month, total_orders,
+ SUM(total_orders) OVER (ORDER BY month ROWS UNBOUNDED PRECEDING) AS cumulative_orders
+FROM olist_analytics.v_monthly ORDER BY month;
 
-
--- 5 top 3 products per category by total sales
-WITH ranked AS (
-    SELECT ct.category_english, oi.prod_id,
-        ROUND(SUM(oi.price)::NUMERIC, 2) AS total_sales,
-        ROW_NUMBER() OVER (
-            PARTITION BY ct.category_english
-            ORDER BY SUM(oi.price) DESC
-        ) AS rank_in_cat
-    FROM order_items oi
-    JOIN products p ON oi.prod_id = p.prod_id
-    JOIN cat_trans ct ON p.category = ct.category
-    GROUP BY ct.category_english, oi.prod_id
+-- Q25 | Exactly up to three products per source category
+-- Legacy: A5. Missing categories retained; exact sales then product key breaks ties.
+WITH sales AS (
+ SELECT category_key, product_id, SUM(price) AS sales
+ FROM olist_analytics.v_items GROUP BY category_key, product_id
+), ranked AS (
+ SELECT *, ROW_NUMBER() OVER (
+   PARTITION BY category_key ORDER BY sales DESC, product_id
+ ) AS position FROM sales
 )
-SELECT * FROM ranked
-WHERE rank_in_cat <= 3
-ORDER BY category_english, rank_in_cat;
+SELECT r.category_key, c.category_label, r.product_id,
+ ROUND(r.sales, 2) AS item_sales_brl, r.position
+FROM ranked r JOIN olist_analytics.v_categories c USING (category_key)
+WHERE position <= 3 ORDER BY r.category_key, r.position;
 
+-- Q26 | Repeat versus one-time customer coverage
+-- Legacy: A6. All people, all statuses; static full-snapshot repeat metric.
+SELECT CASE WHEN is_repeat_customer THEN 'Repeat' ELSE 'One-time' END AS customer_type,
+ COUNT(*) AS people, SUM(lifetime_orders) AS orders,
+ ROUND(SUM(lifetime_item_sales_brl), 2) AS item_sales_brl,
+ ROUND(SUM(lifetime_payment_value_brl), 2) AS payment_value_brl,
+ ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (), 2) AS people_share_pct
+FROM olist_analytics.v_customers GROUP BY is_repeat_customer ORDER BY customer_type;
 
--- 6 flag customers as repeat or one-time
-SELECT cust_id, total_orders,
-    CASE WHEN total_orders > 1 THEN 'repeat'
-         ELSE 'one-time' END AS customer_type
-FROM (
-    SELECT cust_id, COUNT(order_id) AS total_orders
-    FROM orders GROUP BY cust_id
-) AS t
-ORDER BY total_orders DESC LIMIT 15;
+-- Q27 | Executive KPIs and source coverage
+-- New. Review sum/count reproduces raw-review-record weighting.
+SELECT MIN(purchase_date) AS first_purchase_date, MAX(purchase_date) AS last_purchase_date,
+ COUNT(*) AS total_orders,
+ COUNT(*) FILTER (WHERE order_status = 'delivered') AS delivered_orders,
+ COUNT(*) FILTER (WHERE has_payment) AS orders_with_payment,
+ ROUND(SUM(item_sales_brl), 2) AS item_sales_brl, ROUND(SUM(freight_brl), 2) AS freight_brl,
+ ROUND(SUM(payment_value_brl), 2) AS payment_value_brl,
+ ROUND(SUM(payment_value_brl) / NULLIF(COUNT(*) FILTER (WHERE has_payment), 0), 2) AS aov_brl,
+ ROUND(SUM(review_score_sum)::numeric / NULLIF(SUM(review_rows), 0), 2) AS source_review_mean,
+ COUNT(*) FILTER (WHERE eligible_delivery) AS eligible_deliveries,
+ COUNT(*) FILTER (WHERE is_late) AS late_orders, ROUND(AVG(delivery_days), 2) AS avg_delivery_days,
+ ROUND(100.0 * COUNT(*) FILTER (WHERE is_late)
+   / NULLIF(COUNT(*) FILTER (WHERE eligible_delivery), 0), 2) AS late_rate_pct,
+ COUNT(DISTINCT customer_unique_id) AS unique_people
+FROM olist_analytics.v_orders;
+
+-- Q28 | Category Pareto contribution and the 80-percent crossing
+-- New. Includes category crossing 80%; does not assume 20% of categories suffice.
+WITH sales AS (
+ SELECT category_key, SUM(price) AS sales FROM olist_analytics.v_items GROUP BY category_key
+), pareto AS (
+ SELECT *, SUM(sales) OVER () AS total,
+ SUM(sales) OVER (ORDER BY sales DESC, category_key ROWS UNBOUNDED PRECEDING) AS cumulative,
+ COALESCE(SUM(sales) OVER (
+   ORDER BY sales DESC, category_key ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+ ), 0) AS previous_cumulative,
+ ROW_NUMBER() OVER (ORDER BY sales DESC, category_key) AS position FROM sales
+)
+SELECT p.position, p.category_key, c.category_label, ROUND(p.sales, 2) AS item_sales_brl,
+ ROUND(100.0 * p.sales / NULLIF(p.total, 0), 2) AS sales_share_pct,
+ ROUND(100.0 * p.cumulative / NULLIF(p.total, 0), 2) AS cumulative_share_pct,
+ p.previous_cumulative < 0.8 * p.total AS needed_to_reach_80pct
+FROM pareto p JOIN olist_analytics.v_categories c USING (category_key) ORDER BY p.position;
+
+-- Q29 | First-observed customer acquisition
+-- New. First observed source order, not verified marketing acquisition.
+SELECT acquisition_month, COUNT(*) AS first_observed_people,
+ COUNT(*) FILTER (WHERE is_repeat_customer) AS eventually_returning_people,
+ ROUND(100.0 * COUNT(*) FILTER (WHERE is_repeat_customer) / COUNT(*), 2) AS snapshot_repeat_pct
+FROM olist_analytics.v_customers GROUP BY acquisition_month ORDER BY acquisition_month;
+
+-- Q30 | Observed intervals to the next purchase
+-- New. LEAD uses stable person/time/order sequence; final purchases right-censored.
+WITH sequenced AS (
+ SELECT customer_unique_id, order_purchase_timestamp,
+ LEAD(order_purchase_timestamp) OVER (
+   PARTITION BY customer_unique_id ORDER BY order_purchase_timestamp, order_id
+ ) AS next_purchase FROM olist_analytics.v_orders
+), gaps AS (
+ SELECT EXTRACT(EPOCH FROM (next_purchase - order_purchase_timestamp)) / 86400.0 AS days
+ FROM sequenced WHERE next_purchase IS NOT NULL
+)
+SELECT COUNT(*) AS observed_repeat_intervals, ROUND(AVG(days), 2) AS avg_days,
+ ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY days)::numeric, 2) AS median_days,
+ COUNT(*) FILTER (WHERE days < 1) AS intervals_under_one_day FROM gaps;
+
+-- Q31 | Delivered-purchase monthly cohort retention
+-- New. Fixed observation end, first-observed cohorts; future cells omitted, observed gaps zero.
+SELECT cohort_month, month_offset, cohort_size, active_customers,
+ ROUND(retention_pct, 2) AS retention_pct, observation_end
+FROM olist_analytics.v_cohort_retention
+WHERE cohort_month >= DATE '2017-01-01' AND month_offset <= 6
+ORDER BY cohort_month, month_offset;
+
+-- Q32 | RFM segment contribution within the matching eligible population
+-- New. No attribution of future/ineligible orders to a supposedly historical segment.
+SELECT r.segment, COUNT(DISTINCT o.customer_unique_id) AS people, COUNT(*) AS orders,
+ ROUND(SUM(o.item_sales_brl), 2) AS item_sales_brl,
+ ROUND(SUM(o.payment_value_brl), 2) AS payment_value_brl,
+ ROUND(100.0 * SUM(o.payment_value_brl)
+   / NULLIF(SUM(SUM(o.payment_value_brl)) OVER (), 0), 2) AS payment_share_pct
+FROM olist_analytics.v_orders o JOIN olist_analytics.v_rfm r USING (customer_unique_id)
+WHERE o.order_status = 'delivered' AND o.has_payment
+ AND o.order_purchase_timestamp < DATE '2018-09-01'
+GROUP BY r.segment ORDER BY payment_value_brl DESC;
+
+-- Q33 | Seller-state item sales and order participation
+-- New. Order counts non-additive across seller states in a multi-seller order.
+SELECT s.seller_state, COUNT(DISTINCT so.seller_id) AS active_sellers,
+ COUNT(*) AS seller_order_participations, COUNT(DISTINCT so.order_id) AS marketplace_orders,
+ ROUND(SUM(so.seller_item_sales_brl), 2) AS item_sales_brl,
+ ROUND(SUM(so.seller_item_sales_brl) / NULLIF(COUNT(DISTINCT so.order_id), 0), 2)
+   AS regional_item_value_per_order_brl
+FROM olist_analytics.v_seller_orders so JOIN public.sellers s USING (seller_id)
+GROUP BY s.seller_state ORDER BY item_sales_brl DESC, s.seller_state;
+
+-- Q34 | Seller performance scorecard
+-- New. Transparent metrics and sample sizes; no arbitrary composite score.
+SELECT seller_id, seller_city, seller_state, seller_orders, eligible_delivered_orders,
+ ROUND(item_sales_brl, 2) AS item_sales_brl,
+ ROUND(seller_order_item_aov_brl, 2) AS seller_order_item_aov_brl,
+ ROUND(late_rate_pct, 2) AS late_rate_pct, ROUND(avg_delivery_days, 2) AS avg_delivery_days,
+ reviewed_seller_orders, ROUND(avg_order_review_score, 2) AS avg_order_review_score,
+ eligible_shipping_orders,
+ ROUND(shipping_limit_met_pct_proxy, 2) AS shipping_limit_met_pct_proxy,
+ sales_rank, delivery_monitoring_flag
+FROM olist_analytics.v_seller_scorecard ORDER BY item_sales_brl DESC, seller_id LIMIT 20;
+
+-- Q35 | Category delivery and review associations
+-- New. Unique order-category pairs; delivery outcomes shared across categories.
+SELECT c.category_key, c.category_label, COUNT(*) AS eligible_category_orders,
+ COUNT(*) FILTER (WHERE o.is_late) AS late_category_orders,
+ ROUND(100.0 * COUNT(*) FILTER (WHERE o.is_late) / COUNT(*), 2) AS late_rate_pct,
+ ROUND(AVG(o.delivery_days), 2) AS avg_delivery_days,
+ COUNT(o.avg_order_review_score) AS reviewed_category_orders,
+ ROUND(AVG(o.avg_order_review_score), 2) AS avg_order_review_score
+FROM olist_analytics.v_category_orders o JOIN olist_analytics.v_categories c USING (category_key)
+WHERE o.eligible_delivery GROUP BY c.category_key, c.category_label
+ORDER BY eligible_category_orders DESC, c.category_key;
+
+-- Q36 | Installment distribution within payment method
+-- New. Transaction-level distribution, including zero-installment irregularities.
+SELECT payment_type, payment_installments, COUNT(*) AS payment_rows,
+ ROUND(SUM(payment_value), 2) AS payment_value_brl,
+ ROUND(100.0 * COUNT(*) / SUM(COUNT(*)) OVER (PARTITION BY payment_type), 2)
+   AS within_method_transaction_pct
+FROM public.order_payments GROUP BY payment_type, payment_installments
+ORDER BY payment_type, payment_installments;
+
+-- Q37 | Order-level financial reconciliation
+-- New. BRL0.01 tolerance only for comparable orders; missing sides classified separately.
+WITH classified AS (
+ SELECT *, CASE WHEN NOT has_items AND NOT has_payment THEN 'Neither source'
+   WHEN NOT has_items THEN 'Payment only' WHEN NOT has_payment THEN 'Items only'
+   WHEN ABS(payment_difference_brl) > 0.01 THEN 'Difference over BRL0.01'
+   ELSE 'Within BRL0.01' END AS reconciliation_status FROM olist_analytics.v_orders
+)
+SELECT reconciliation_status, COUNT(*) AS orders,
+ ROUND(SUM(item_sales_brl + freight_brl), 2) AS items_and_freight_brl,
+ ROUND(SUM(payment_value_brl), 2) AS payment_value_brl,
+ ROUND(SUM(ABS(payment_difference_brl)), 2) AS comparable_absolute_difference_brl
+FROM classified GROUP BY reconciliation_status ORDER BY reconciliation_status;
+
+-- Q38 | Largest comparable financial differences
+-- New. Investigation evidence; no unproven attribution to discounts, fees or fraud.
+SELECT order_id, order_status, item_rows, payment_rows,
+ ROUND(item_sales_brl + freight_brl, 2) AS items_and_freight_brl,
+ ROUND(payment_value_brl, 2) AS payment_value_brl,
+ ROUND(payment_difference_brl, 2) AS signed_difference_brl
+FROM olist_analytics.v_orders
+WHERE has_items AND has_payment AND ABS(payment_difference_brl) > 0.01
+ORDER BY ABS(payment_difference_brl) DESC, order_id LIMIT 20;
+COMMIT;
