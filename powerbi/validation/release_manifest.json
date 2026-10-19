@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-19",
+  "pbix": "olist_2_0.pbix",
+  "pdf": "Olist_2_0.pdf",
+  "pdf_pages": 3,
+  "desktop_checks": 73,
+  "passed": 73,
+  "failed": 0,
+  "files": {
+    "olist_2_0.pbix": {
+      "bytes": 117952983,
+      "sha256": "c2f28bea302ac5c71076ad1995bfc28f6934d1e7626f4b4652b4d2fa1e46292a"
+    },
+    "Olist_2_0.pdf": {
+      "bytes": 377665,
+      "sha256": "267870940ec1dcbcc546bf08e1824d7f5f92ff13b2fc8e738e0c85f8ed18a961"
+    }
+  }
+}

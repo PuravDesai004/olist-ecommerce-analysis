@@ -1,0 +1,103 @@
+table FactCategoryOrders
+	lineageTag: 8c3e84f5-7a82-5b5c-a152-5817da811478
+
+	column order_id
+		dataType: string
+		lineageTag: f4ed6837-e6ac-53fb-b7ab-28a2a76b16dc
+		summarizeBy: none
+		sourceColumn: order_id
+
+	column category_key
+		dataType: string
+		lineageTag: 2c60a027-cdf1-5a88-856b-84a48aa9f692
+		summarizeBy: none
+		sourceColumn: category_key
+
+	column item_rows
+		dataType: int64
+		lineageTag: 8dfc8435-6207-5869-b5c0-84c8b13b39f8
+		summarizeBy: none
+		sourceColumn: item_rows
+
+	column category_item_sales_brl
+		dataType: decimal
+		lineageTag: 592fa8e1-3be4-5fbe-b935-45b8d8fc2387
+		summarizeBy: none
+		sourceColumn: category_item_sales_brl
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+
+	column category_freight_brl
+		dataType: decimal
+		lineageTag: 811cd5dc-4168-5eff-a55b-b0bbdddf5379
+		summarizeBy: none
+		sourceColumn: category_freight_brl
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+
+	column purchase_date
+		dataType: dateTime
+		lineageTag: fc459caf-e8f5-53db-a28a-cddf9de693ad
+		summarizeBy: none
+		sourceColumn: purchase_date
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column customer_unique_id
+		dataType: string
+		lineageTag: 43757431-1a79-5046-9aad-fac11e29bab4
+		summarizeBy: none
+		sourceColumn: customer_unique_id
+
+	column customer_state
+		dataType: string
+		lineageTag: 858effbb-9420-5814-8071-86699aedc9f7
+		summarizeBy: none
+		sourceColumn: customer_state
+		dataCategory: StateOrProvince
+
+	column order_status
+		dataType: string
+		lineageTag: 601143e7-24f3-5685-954f-2637518221cb
+		summarizeBy: none
+		sourceColumn: order_status
+
+	column eligible_delivery
+		dataType: boolean
+		lineageTag: 8e497b6d-5568-5f94-b984-fbf316b3bd4e
+		summarizeBy: none
+		sourceColumn: eligible_delivery
+
+	column delivery_days
+		dataType: double
+		lineageTag: a20283eb-fe03-5364-9c2b-47841fffad8d
+		summarizeBy: none
+		sourceColumn: delivery_days
+
+	column delay_days
+		dataType: double
+		lineageTag: f894f4f3-f991-554f-9ef7-ea52303952c3
+		summarizeBy: none
+		sourceColumn: delay_days
+
+	column is_late
+		dataType: boolean
+		lineageTag: 8923f3df-edf2-5e1a-b0c0-6006dc96fa68
+		summarizeBy: none
+		sourceColumn: is_late
+
+	column avg_order_review_score
+		dataType: double
+		lineageTag: ec6554e7-58ea-50ce-94ea-2c3c4c560c49
+		summarizeBy: none
+		sourceColumn: avg_order_review_score
+
+	partition FactCategoryOrders = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    View = Source{[Schema="olist_analytics", Item="v_category_orders"]}[Data]
+				in
+				    View
+
+	annotation PBI_ResultType = Table

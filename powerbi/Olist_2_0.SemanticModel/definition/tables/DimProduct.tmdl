@@ -1,0 +1,79 @@
+table DimProduct
+	lineageTag: bb72ea73-c9ae-5c50-8b55-861d13bbff66
+
+	column product_id
+		dataType: string
+		lineageTag: a3018a1e-5eea-52db-ae52-236b71b4bcee
+		summarizeBy: none
+		sourceColumn: product_id
+
+	column product_category_name
+		dataType: string
+		lineageTag: 1a7d5117-4a24-5282-acd4-36656264c558
+		summarizeBy: none
+		sourceColumn: product_category_name
+
+	column product_name_lenght
+		dataType: int64
+		lineageTag: 1aaae1f2-096d-51a2-88d2-b9d259e7703f
+		summarizeBy: none
+		sourceColumn: product_name_lenght
+
+	column product_description_lenght
+		dataType: int64
+		lineageTag: c273eb1f-ea66-5cd8-9131-299475732de4
+		summarizeBy: none
+		sourceColumn: product_description_lenght
+
+	column product_photos_qty
+		dataType: int64
+		lineageTag: 94695b69-7600-5b2d-9a9d-f09a7b5babd3
+		summarizeBy: none
+		sourceColumn: product_photos_qty
+
+	column product_weight_g
+		dataType: int64
+		lineageTag: 049d5148-2111-5ca5-9e00-7b63baf61828
+		summarizeBy: none
+		sourceColumn: product_weight_g
+
+	column product_length_cm
+		dataType: int64
+		lineageTag: f4775ce9-7bda-5cb1-bd88-65f350e18278
+		summarizeBy: none
+		sourceColumn: product_length_cm
+
+	column product_height_cm
+		dataType: int64
+		lineageTag: 297fc6d7-ac67-5a3c-abf0-a06276922e66
+		summarizeBy: none
+		sourceColumn: product_height_cm
+
+	column product_width_cm
+		dataType: int64
+		lineageTag: 41a668e9-72d4-558d-b32d-eb30b7955dc0
+		summarizeBy: none
+		sourceColumn: product_width_cm
+
+	column category_key
+		dataType: string
+		lineageTag: edf2406f-022f-5579-addb-687c479e750a
+		summarizeBy: none
+		sourceColumn: category_key
+
+	column category_label
+		dataType: string
+		lineageTag: 8f3a1a6a-06a5-5458-8475-323d51247dae
+		summarizeBy: none
+		sourceColumn: category_label
+
+	partition DimProduct = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    View = Source{[Schema="olist_analytics", Item="v_products"]}[Data]
+				in
+				    View
+
+	annotation PBI_ResultType = Table

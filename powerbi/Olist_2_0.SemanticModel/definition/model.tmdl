@@ -1,0 +1,55 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-IN
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["public customers","public geolocation","public order_items","public order_reviews","public order_payments","public orders","public product_category_name_translation","public products","public sellers","FactOrders","FactItems","FactPayments","FactSellerOrders","FactCategoryOrders","DimCustomer","DimProduct","DimSeller","DimCategory","DimCustomerState","DimDate","CohortRetention"]
+
+annotation PBI_ProTooling = ["DaxQueryView_Desktop","DevMode"]
+
+ref table 'public customers'
+ref table 'public geolocation'
+ref table 'public order_items'
+ref table DateTableTemplate_1a5e1f04-a82c-4c84-a3aa-9a74e2183a78
+ref table LocalDateTable_69467eab-56d0-4eb1-8d45-614b6eec29cb
+ref table 'public order_reviews'
+ref table LocalDateTable_d5761a3e-82a7-4ec1-a5ce-8151577090a2
+ref table LocalDateTable_99bf4386-3c21-4b82-8924-96deaf7bad9b
+ref table 'public order_payments'
+ref table 'public orders'
+ref table LocalDateTable_62f5ea92-2a0e-4124-8be2-0f1fd6c32eac
+ref table LocalDateTable_fd4a96c7-fa6e-4db7-ab19-b537510747f9
+ref table LocalDateTable_cff9b753-950d-4cc7-b61d-7675f29df047
+ref table LocalDateTable_02613415-cdb1-4b13-80b8-ca12c2611b9d
+ref table LocalDateTable_f3d5f33c-4010-4310-85c3-231900e555d4
+ref table 'public product_category_name_translation'
+ref table 'public products'
+ref table 'public sellers'
+ref table FactOrders
+ref table FactItems
+ref table FactPayments
+ref table FactSellerOrders
+ref table FactCategoryOrders
+ref table DimCustomer
+ref table DimProduct
+ref table DimSeller
+ref table DimCategory
+ref table DimCustomerState
+ref table DimDate
+ref table CohortRetention
+ref table Metrics
+ref table LocalDateTable_2c06f8b9-73ca-447f-a8cb-620913d62710
+ref table LocalDateTable_151030ae-4faa-4f7f-bc6d-3191c6a2d6fe
+ref table LocalDateTable_b93cfede-da68-4afc-95db-460461115262
+ref table LocalDateTable_312b0e9a-96b8-41b8-89ae-3432cf7ccdc1
+ref table LocalDateTable_1fb50140-fa7a-41dd-8797-827a1a62bdbe
+ref table LocalDateTable_437e12d4-6da0-49cc-a685-3f8f07a6c72a
+ref table LocalDateTable_98e75e99-5b22-49e1-ae38-f44e0ba44cd2
+
+ref cultureInfo en-US

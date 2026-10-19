@@ -1,0 +1,55 @@
+table 'public customers'
+	isHidden
+	lineageTag: 66ffb4df-b7b0-4976-9eb3-4390e02ad7a2
+
+	column customer_id
+		dataType: string
+		lineageTag: 6c213f13-fbce-41af-9ceb-91407e48c518
+		summarizeBy: none
+		sourceColumn: customer_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_unique_id
+		dataType: string
+		lineageTag: 90c317a7-78cb-4070-a15d-fd0353cd9433
+		summarizeBy: none
+		sourceColumn: customer_unique_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_zip_code_prefix
+		dataType: string
+		lineageTag: 9cb4c05d-2c3f-4a82-8bf6-e2d369567621
+		summarizeBy: none
+		sourceColumn: customer_zip_code_prefix
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_city
+		dataType: string
+		lineageTag: 8a3f610e-6149-4c4c-8f93-2c8d72eb1585
+		summarizeBy: none
+		sourceColumn: customer_city
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_state
+		dataType: string
+		lineageTag: 19baea17-53f3-4718-93ba-fe3412985f71
+		summarizeBy: none
+		sourceColumn: customer_state
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'public customers' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    public_customers = Source{[Schema="public",Item="customers"]}[Data]
+				in
+				    public_customers
+
+	annotation PBI_ResultType = Table
+

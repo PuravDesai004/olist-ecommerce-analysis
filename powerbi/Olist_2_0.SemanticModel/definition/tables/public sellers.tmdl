@@ -1,0 +1,47 @@
+table 'public sellers'
+	isHidden
+	lineageTag: 0312a27c-2819-4bc6-94f8-a7641cdb229c
+
+	column seller_id
+		dataType: string
+		lineageTag: d27ba214-34ba-49f4-992a-5ce79ecd8e6f
+		summarizeBy: none
+		sourceColumn: seller_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column seller_zip_code_prefix
+		dataType: string
+		lineageTag: 9b521fe8-e919-4abd-9cc7-4fb9b8e56cc1
+		summarizeBy: none
+		sourceColumn: seller_zip_code_prefix
+
+		annotation SummarizationSetBy = Automatic
+
+	column seller_city
+		dataType: string
+		lineageTag: 12ddaed6-3ca6-4046-bbfa-8371acaafba8
+		summarizeBy: none
+		sourceColumn: seller_city
+
+		annotation SummarizationSetBy = Automatic
+
+	column seller_state
+		dataType: string
+		lineageTag: 82fa11d0-def4-4acf-8ccb-796297a4e003
+		summarizeBy: none
+		sourceColumn: seller_state
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'public sellers' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    public_sellers = Source{[Schema="public",Item="sellers"]}[Data]
+				in
+				    public_sellers
+
+	annotation PBI_ResultType = Table
+

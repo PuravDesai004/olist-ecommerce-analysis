@@ -1,0 +1,69 @@
+table CohortRetention
+	lineageTag: b9068a1b-de9f-5fd1-bbed-26deefdb0a85
+
+	column cohort_month
+		dataType: dateTime
+		lineageTag: 35f1d921-3161-567e-a7c2-6d8f74b09112
+		summarizeBy: none
+		sourceColumn: cohort_month
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column activity_month
+		dataType: dateTime
+		lineageTag: f45f4e02-f26f-58a0-afb5-f0c7a36d10dc
+		summarizeBy: none
+		sourceColumn: activity_month
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column month_offset
+		dataType: int64
+		lineageTag: 0df2af86-04ef-5914-bcda-898fa47075bb
+		summarizeBy: none
+		sourceColumn: month_offset
+
+	column cohort_size
+		dataType: int64
+		lineageTag: 85a3bb18-71f4-5b5d-be53-b0f0f40c5637
+		summarizeBy: none
+		sourceColumn: cohort_size
+
+	column active_customers
+		dataType: int64
+		lineageTag: cbfffc03-49e1-5a00-9f0d-512bb468c1cc
+		summarizeBy: none
+		sourceColumn: active_customers
+
+	column retention_pct
+		dataType: double
+		lineageTag: f4b0a30e-584d-545e-8f08-0e04b90f2222
+		summarizeBy: none
+		sourceColumn: retention_pct
+
+	column observation_end
+		dataType: dateTime
+		lineageTag: 7f830cd1-acac-5c28-a319-d4defffb843b
+		summarizeBy: none
+		sourceColumn: observation_end
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Cohort month' = FORMAT(CohortRetention[cohort_month], "yyyy-MM")
+		dataType: string
+		summarizeBy: none
+		sortByColumn: cohort_month
+
+	partition CohortRetention = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    View = Source{[Schema="olist_analytics", Item="v_cohort_retention"]}[Data]
+				in
+				    View
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,31 @@
+table 'public product_category_name_translation'
+	isHidden
+	lineageTag: d9be29d3-32a8-449f-9cdb-8bb41dbc84c7
+
+	column product_category_name
+		dataType: string
+		lineageTag: a0fdf254-a6fd-4ba9-bdde-856f8006eee2
+		summarizeBy: none
+		sourceColumn: product_category_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_category_name_english
+		dataType: string
+		lineageTag: 5eb312c4-593d-4405-ba10-7e8121adfd86
+		summarizeBy: none
+		sourceColumn: product_category_name_english
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'public product_category_name_translation' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    public_product_category_name_translation = Source{[Schema="public",Item="product_category_name_translation"]}[Data]
+				in
+				    public_product_category_name_translation
+
+	annotation PBI_ResultType = Table
+

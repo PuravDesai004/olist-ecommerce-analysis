@@ -1,21 +1,22 @@
-# Olist 2.0 - PostgreSQL Analytics and Power BI Handoff
+# Olist 2.0 - PostgreSQL Analytics and Power BI Dashboard
 
 An upgrade of my original SQL and Power BI analysis of the Brazilian Olist
 marketplace. The project turns nine source datasets into a validated PostgreSQL
-reporting layer, advanced business analyses and a documented model for a future
-Power BI dashboard.
+reporting layer, advanced business analyses and a three-page Power BI dashboard.
 
-**Stack:** PostgreSQL 18, advanced SQL, Power BI preparation, Git.
+**Stack:** PostgreSQL 18, advanced SQL, Power BI Desktop, DAX, Git.
 PostgreSQL handles the analysis and SQL validation. Setup and verification use
 SQL files directly through psql or pgAdmin.
 
-**Dashboard status:** Olist 2.0's Power BI dashboard is intentionally unfinished.
-I will connect, model, implement DAX and build the three pages manually.
-[Power BI implementation guide](POWER_BI_GUIDE.md)
+**Dashboard status:** completed and validated in Power BI Desktop on 19 October
+2026: three pages, 52 measures and **73/73 DAX validation checks passed**.
+[Download the PBIX](olist_2_0.pbix) (Git LFS) ·
+[View the three-page PDF](Olist_2_0.pdf) ·
+[Editable project and validation notes](powerbi/README.md).
 
 **Versions:** the original published project is preserved on
 [olist-1.0](https://github.com/PuravDesai004/olist-ecommerce-analysis/tree/olist-1.0);
-the SQL/backend release belongs on main, with olist-2.0 retained as the
+the current SQL and dashboard release belongs on main, with olist-2.0 retained as the
 development branch.
 
 ## Business questions
@@ -204,8 +205,9 @@ retained as past evidence; the manual SQL commands do not repeat those file
 checks or the historical 29-query audit. SQL assertions and raw reconciliations
 check the currently stored data and reporting views.
 
-These are SQL/backend checks. Power BI relationships, DAX evaluation, refresh
-and visuals remain manual acceptance work; follow POWER_BI_GUIDE.md.
+These historical checks cover the SQL/backend. The additional Desktop model,
+DAX and interaction verification is recorded in [powerbi/README.md](powerbi/README.md)
+and [the executed DAX summary](powerbi/validation/desktop_final_validation_summary.json).
 
 ## Data limitations and analytical cautions
 
@@ -245,6 +247,9 @@ olist_queries.sql
 overview_page.jpg              # genuine legacy Deep Dive
 deep_dive_page.jpg             # genuine legacy Overview
 olist_dashboard.pdf           # genuine legacy dashboard export
+olist_2_0.pbix                # completed Olist 2.0 dashboard; Git LFS
+Olist_2_0.pdf                 # current three-page Desktop export
+powerbi/                      # editable PBIP source, previews and validation
 data/raw/                     # nine local CSVs; ignored
 sql/
   01_create_tables.sql
@@ -259,8 +264,9 @@ sql/
 The previously requested learning workbook is preserved locally under ignored
 output/. It is a teaching artifact, not the new dashboard. No raw datasets,
 password files, environments or caches belong in Git.
-The local olist_2_0.pbix is ignored and was not opened or modified. Remove its
-specific ignore entry only when you are ready to publish your manual dashboard.
+The completed olist_2_0.pbix is versioned through Git LFS because it exceeds
+GitHub's normal file-size limit. Use the file's Download button or clone with
+Git LFS installed to obtain the full report. Desktop caches and backups remain local.
 
 ## Original Olist 1.0 dashboard - legacy evidence
 
@@ -278,16 +284,27 @@ from the improved definitions above. Filenames are kept intact.
 
 [Original dashboard PDF export](olist_dashboard.pdf)
 
-## Finish the Power BI project manually
+## Olist 2.0 dashboard
 
-Use POWER_BI_GUIDE.md for connection, Import views, explicit relationships,
-date table, DAX examples, the three page plans, slicers, tooltips/drill-through
-and SQL comparison checks. No Olist 2.0 dashboard, visuals or .pbix has been
-created or opened during this implementation.
+Open [olist_2_0.pbix](olist_2_0.pbix) in Power BI Desktop to explore the imported
+snapshot. Refresh requires the documented local PostgreSQL views and local
+authentication. [POWER_BI_GUIDE.md](POWER_BI_GUIDE.md) retains the modeling
+contract and learning examples; the current implementation is in powerbi/.
 
-After you build and verify it, add actual new screenshots and dashboard files,
-clearly label their version, record the model/measure acceptance checks and
-update this status. Keep the legacy assets and the version history.
+### Executive Overview
+
+![Olist 2.0 Executive Overview](powerbi/previews/executive_overview.png)
+
+### Customer Intelligence
+
+![Olist 2.0 Customer Intelligence](powerbi/previews/customer_intelligence.png)
+
+### Seller & Delivery Performance
+
+![Olist 2.0 Seller & Delivery Performance](powerbi/previews/seller_delivery.png)
+
+The previews come from the final Desktop PDF export. Original Olist 1.0 assets
+and the olist-1.0 branch remain preserved.
 
 ## Author
 

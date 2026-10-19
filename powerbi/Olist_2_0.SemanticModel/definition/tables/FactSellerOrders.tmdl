@@ -1,0 +1,138 @@
+table FactSellerOrders
+	lineageTag: 9e60962f-5246-5f9b-b4b6-f7dc98806f02
+
+	column order_id
+		dataType: string
+		lineageTag: 98be61dd-2ef6-5527-a3e3-bfdfe4311f1e
+		summarizeBy: none
+		sourceColumn: order_id
+
+	column seller_id
+		dataType: string
+		lineageTag: 49b3d1a3-7362-5237-9022-9a76cc3d3146
+		summarizeBy: none
+		sourceColumn: seller_id
+
+	column item_rows
+		dataType: int64
+		lineageTag: c0b14d2b-c6bd-5806-b164-b8c836220bdc
+		summarizeBy: none
+		sourceColumn: item_rows
+
+	column seller_item_sales_brl
+		dataType: decimal
+		lineageTag: ac152fc1-a043-5d60-9330-3a6478bbcbcd
+		summarizeBy: none
+		sourceColumn: seller_item_sales_brl
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+
+	column seller_freight_brl
+		dataType: decimal
+		lineageTag: a710e5e0-5ec5-5203-912a-d7083fbcc525
+		summarizeBy: none
+		sourceColumn: seller_freight_brl
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+
+	column earliest_shipping_limit
+		dataType: dateTime
+		lineageTag: a76c85df-f9cb-5a07-ae91-f79ffb4f58f3
+		summarizeBy: none
+		sourceColumn: earliest_shipping_limit
+		formatString: dd MMM yyyy
+
+		variation Variation
+			isDefault
+			relationship: 338b7360-032d-4fe8-8021-0b36fe909931
+			defaultHierarchy: LocalDateTable_98e75e99-5b22-49e1-ae38-f44e0ba44cd2.'Date Hierarchy'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column purchase_date
+		dataType: dateTime
+		lineageTag: 23df3dd4-aa46-53c0-a993-7d598a135135
+		summarizeBy: none
+		sourceColumn: purchase_date
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column purchase_month
+		dataType: dateTime
+		lineageTag: 252aa3cb-5086-5547-bb4e-c30abb2d76cb
+		summarizeBy: none
+		sourceColumn: purchase_month
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column customer_unique_id
+		dataType: string
+		lineageTag: 38f500fd-3ad5-5f63-bc54-b286765f7893
+		summarizeBy: none
+		sourceColumn: customer_unique_id
+
+	column customer_state
+		dataType: string
+		lineageTag: 6ac8f0fe-94aa-5068-aa14-a3abde9285ad
+		summarizeBy: none
+		sourceColumn: customer_state
+		dataCategory: StateOrProvince
+
+	column order_status
+		dataType: string
+		lineageTag: 0510d365-e8e1-5fd3-9e8b-37c97e05961c
+		summarizeBy: none
+		sourceColumn: order_status
+
+	column eligible_delivery
+		dataType: boolean
+		lineageTag: e655efcf-2320-5b70-b40a-ed445ab21e1a
+		summarizeBy: none
+		sourceColumn: eligible_delivery
+
+	column delivery_days
+		dataType: double
+		lineageTag: be0a64ee-17b2-5902-9558-8da6562e8303
+		summarizeBy: none
+		sourceColumn: delivery_days
+
+	column delay_days
+		dataType: double
+		lineageTag: 0f37793d-0710-5926-9a82-ceed8a3962d7
+		summarizeBy: none
+		sourceColumn: delay_days
+
+	column is_late
+		dataType: boolean
+		lineageTag: 13e612a9-651e-5cbf-bae0-973cde4d6d80
+		summarizeBy: none
+		sourceColumn: is_late
+
+	column avg_order_review_score
+		dataType: double
+		lineageTag: ce80e4fd-66a2-5b78-93e7-9b4517634f1c
+		summarizeBy: none
+		sourceColumn: avg_order_review_score
+
+	column eligible_shipping_proxy
+		dataType: boolean
+		lineageTag: 607a80b7-4ed8-598b-bb6d-6e2ba0c5a7da
+		summarizeBy: none
+		sourceColumn: eligible_shipping_proxy
+
+	column met_shipping_limit_proxy
+		dataType: boolean
+		lineageTag: 16910ad2-9697-5d28-85cb-ebe7c49cdcb0
+		summarizeBy: none
+		sourceColumn: met_shipping_limit_proxy
+
+	partition FactSellerOrders = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    View = Source{[Schema="olist_analytics", Item="v_seller_orders"]}[Data]
+				in
+				    View
+
+	annotation PBI_ResultType = Table

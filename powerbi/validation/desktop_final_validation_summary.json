@@ -1,0 +1,8 @@
+{
+  "engine": "Power BI Desktop DAX query view",
+  "query": "validate_final.dax",
+  "checks": 73,
+  "passed": 73,
+  "failed": 0,
+  "nativeAccessibilityRow": "6344 row 1 73 73 0"
+}

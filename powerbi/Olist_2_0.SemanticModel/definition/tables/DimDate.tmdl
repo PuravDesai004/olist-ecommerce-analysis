@@ -1,0 +1,71 @@
+table DimDate
+	lineageTag: acd3d875-f019-51a4-8466-31db96827139
+	dataCategory: Time
+
+	column date
+		dataType: dateTime
+		lineageTag: 85fcced9-255f-52e9-8696-e63686189b2b
+		summarizeBy: none
+		sourceColumn: date
+		formatString: dd MMM yyyy
+		isKey
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column year
+		dataType: int64
+		lineageTag: a2530cc4-7909-558a-a80e-94521753b130
+		summarizeBy: none
+		sourceColumn: year
+
+	column quarter
+		dataType: int64
+		lineageTag: 96c99d4c-6c02-5986-a866-cbada24f22e4
+		summarizeBy: none
+		sourceColumn: quarter
+
+	column month_number
+		dataType: int64
+		lineageTag: b05da8c3-8aad-5c37-b518-52bf6691cb18
+		summarizeBy: none
+		sourceColumn: month_number
+
+	column month_name
+		dataType: string
+		lineageTag: eb162a5a-ea8a-5bca-8fb8-324b5871bdda
+		summarizeBy: none
+		sourceColumn: month_name
+		sortByColumn: month_number
+
+	column month_start
+		dataType: dateTime
+		lineageTag: 3deb1501-612b-52ab-9b3b-ea80b2e51e55
+		summarizeBy: none
+		sourceColumn: month_start
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column year_month
+		dataType: string
+		lineageTag: e4fc33c8-5609-500e-bffe-c318a9fc3a12
+		summarizeBy: none
+		sourceColumn: year_month
+		sortByColumn: year_month_sort
+
+	column year_month_sort
+		dataType: int64
+		lineageTag: a52988ad-e5ee-5eb0-8bd1-884efa2603f5
+		summarizeBy: none
+		sourceColumn: year_month_sort
+
+	partition DimDate = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    View = Source{[Schema="olist_analytics", Item="v_date"]}[Data]
+				in
+				    View
+
+	annotation PBI_ResultType = Table

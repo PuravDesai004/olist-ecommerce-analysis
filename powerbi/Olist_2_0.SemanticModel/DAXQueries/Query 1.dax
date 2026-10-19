@@ -1,0 +1,15 @@
+EVALUATE
+SELECTCOLUMNS(INFO.VIEW.RELATIONSHIPS(),
+  "Name", [Name], "Relationship", [Relationship],
+  "Active", [IsActive], "Filter", [CrossFilteringBehavior])
+
+EVALUATE
+ROW("Customers", COUNTROWS('public customers'),
+    "Orders", COUNTROWS('public orders'),
+    "Items", COUNTROWS('public order_items'),
+    "Payments", COUNTROWS('public order_payments'),
+    "Reviews", COUNTROWS('public order_reviews'),
+    "Products", COUNTROWS('public products'),
+    "Sellers", COUNTROWS('public sellers'),
+    "Geolocation", COUNTROWS('public geolocation'),
+    "Translations", COUNTROWS('public product_category_name_translation'))

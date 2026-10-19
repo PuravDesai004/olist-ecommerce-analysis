@@ -1,0 +1,76 @@
+table FactPayments
+	lineageTag: 1e863bb8-208a-5c0e-9470-f99f37439856
+
+	column order_id
+		dataType: string
+		lineageTag: 2580e82a-213d-55af-a2e8-e12988d08430
+		summarizeBy: none
+		sourceColumn: order_id
+
+	column payment_sequential
+		dataType: int64
+		lineageTag: 63c842d0-03e2-5ebf-84cd-5e0ac35df49d
+		summarizeBy: none
+		sourceColumn: payment_sequential
+
+	column payment_type
+		dataType: string
+		lineageTag: 73e9e87b-e018-51b3-964a-8587ce835da6
+		summarizeBy: none
+		sourceColumn: payment_type
+
+	column payment_installments
+		dataType: int64
+		lineageTag: c7fead70-ea47-5ff1-8f25-78a0248a8262
+		summarizeBy: none
+		sourceColumn: payment_installments
+
+	column payment_value
+		dataType: decimal
+		lineageTag: 391878de-afca-5bc1-8162-8c051c9e9ab8
+		summarizeBy: none
+		sourceColumn: payment_value
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+
+	column customer_unique_id
+		dataType: string
+		lineageTag: e8e3a11f-30b3-5ad6-9f2d-7eaae81c553d
+		summarizeBy: none
+		sourceColumn: customer_unique_id
+
+	column customer_state
+		dataType: string
+		lineageTag: dec0322d-3887-54dd-b74a-645a6b25465d
+		summarizeBy: none
+		sourceColumn: customer_state
+		dataCategory: StateOrProvince
+
+	column order_status
+		dataType: string
+		lineageTag: 0e177100-80c4-5704-8d30-c5484fcae10d
+		summarizeBy: none
+		sourceColumn: order_status
+
+	column purchase_date
+		dataType: dateTime
+		lineageTag: 9f806807-7380-5dc0-a143-bba4b29273d1
+		summarizeBy: none
+		sourceColumn: purchase_date
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Payment method' = SWITCH(FactPayments[payment_type], "credit_card", "Credit card", "debit_card", "Debit card", "boleto", "Boleto", "voucher", "Voucher", "not_defined", "Not defined", FactPayments[payment_type])
+		dataType: string
+		summarizeBy: none
+
+	partition FactPayments = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    View = Source{[Schema="olist_analytics", Item="v_payments"]}[Data]
+				in
+				    View
+
+	annotation PBI_ResultType = Table

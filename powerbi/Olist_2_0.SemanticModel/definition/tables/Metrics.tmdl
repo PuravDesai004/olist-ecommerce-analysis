@@ -1,0 +1,273 @@
+table Metrics
+	lineageTag: bd62bd7e-e511-5afb-8134-076e002f9856
+
+	measure 'Orders' = COUNTROWS(FactOrders)
+		formatString: #,##0
+		displayFolder: Overview
+		lineageTag: 6d2051ea-8d34-5d6c-9cf6-0002f5a48ba8
+
+	measure 'Delivered Orders' = CALCULATE([Orders], FactOrders[order_status] = "delivered")
+		formatString: #,##0
+		displayFolder: Overview
+		lineageTag: b587d31b-8221-5dad-a436-00b86b77fd74
+
+	measure 'Item Sales BRL' = SUM(FactItems[price])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Overview
+		lineageTag: a5d82d30-c9a1-5c16-985c-fe86599f0d7e
+
+	measure 'Freight BRL' = SUM(FactItems[freight_value])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Overview
+		lineageTag: 5b239ab5-6ebe-582c-8e62-c5f0f92b5799
+
+	measure 'Payment Value BRL' = SUM(FactOrders[payment_value_brl])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Overview
+		lineageTag: dccff2d9-e9db-51b0-ad36-ebf58dd93447
+
+	measure 'Orders With Payment' = CALCULATE([Orders], FactOrders[has_payment] = TRUE())
+		formatString: #,##0
+		displayFolder: Overview
+		lineageTag: b3685e4f-146e-58ae-89fe-b92c3ffbcc0f
+
+	measure 'AOV BRL' = DIVIDE([Payment Value BRL], [Orders With Payment])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Overview
+		lineageTag: 92e3c83d-c472-5a67-a89b-adc65c542b2e
+
+	measure 'Payment Transactions' = COUNTROWS(FactPayments)
+		formatString: #,##0
+		displayFolder: Overview
+		lineageTag: 11ccd789-997d-5fc7-8795-534ebbaf8b6b
+
+	measure 'Payment Method Value BRL' = SUM(FactPayments[payment_value])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Overview
+		lineageTag: 618b2115-32e2-5bbc-a1c0-877916a632f7
+
+	measure 'Item Orders' = DISTINCTCOUNT(FactItems[order_id])
+		formatString: #,##0
+		displayFolder: Overview
+		lineageTag: 1c0fd1e9-277e-55d4-a51a-0fd57137207f
+
+	measure 'Previous Month Sales BRL' = CALCULATE([Item Sales BRL], DATEADD(DimDate[date], -1, MONTH))
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Overview
+		lineageTag: a2a706a3-9d92-5598-8ca1-e3c4db355e3f
+
+	measure 'Sales MoM %' = DIVIDE([Item Sales BRL] - [Previous Month Sales BRL], [Previous Month Sales BRL])
+		formatString: 0.0%;-0.0%;0.0%
+		displayFolder: Overview
+		lineageTag: e46b08eb-f2b1-52a4-8ac2-3539c28b0cde
+
+	measure 'Freight to Sales %' = DIVIDE([Freight BRL], [Item Sales BRL])
+		formatString: 0.0%
+		displayFolder: Overview
+		lineageTag: cf672beb-fc41-5ad0-b85b-5bea365e8ba6
+
+	measure 'Category Sales Rank' = RANKX(ALLSELECTED(DimCategory[Category]), [Item Sales BRL], , DESC, DENSE)
+		formatString: #,##0
+		displayFolder: Overview
+		lineageTag: 75fa37fd-666b-536e-82c4-ce8fdac8b2e2
+
+	measure 'Top Category Sales BRL' = IF([Category Sales Rank] <= 10, [Item Sales BRL])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Overview
+		lineageTag: 2cf45e3c-7ef5-5459-ae53-e90b49199073
+
+	measure 'Customers' = DISTINCTCOUNT(FactOrders[customer_unique_id])
+		formatString: #,##0
+		displayFolder: Customers
+		lineageTag: de712e80-d989-55c5-a8bb-30de7e1f4170
+
+	measure 'Returning Customers' = COUNTROWS(FILTER(VALUES(FactOrders[customer_unique_id]), CALCULATE(COUNTROWS(FactOrders)) > 1))
+		formatString: #,##0
+		displayFolder: Customers
+		lineageTag: 66768d7b-9d80-5017-8a2d-502e60b03d6d
+
+	measure 'Returning Customer %' = DIVIDE([Returning Customers], [Customers])
+		formatString: 0.00%
+		displayFolder: Customers
+		lineageTag: 7d941eb9-3650-5c3c-b6ee-6772a52e8e4d
+
+	measure 'New Customers' = VAR DatesInScope = VALUES(DimDate[date]) RETURN COUNTROWS(FILTER(VALUES(FactOrders[customer_unique_id]), VAR PersonKey = FactOrders[customer_unique_id] VAR FirstPurchase = LOOKUPVALUE(DimCustomer[first_purchase_date], DimCustomer[customer_unique_id], PersonKey) RETURN CONTAINS(DatesInScope, DimDate[date], FirstPurchase)))
+		formatString: #,##0
+		displayFolder: Customers
+		lineageTag: 478820e8-6d35-5c03-89a3-9a0c0da6ff1f
+
+	measure 'Snapshot People' = COUNTROWS(DimCustomer)
+		formatString: #,##0
+		displayFolder: Customers
+		lineageTag: 9c70ba91-7860-5a10-b622-3b0f2694f85c
+
+	measure 'RFM Eligible People' = CALCULATE(COUNTROWS(DimCustomer), KEEPFILTERS(DimCustomer[rfm_segment] <> "Not eligible"))
+		formatString: #,##0
+		displayFolder: Customers
+		lineageTag: 5ca2691a-5b22-5f2e-b69a-f02c82f38e58
+
+	measure 'RFM Monetary BRL' = SUM(DimCustomer[rfm_monetary_brl])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Customers
+		lineageTag: 10e5424f-4c09-5cd1-9d6c-53196f9cd945
+
+	measure 'Cohort Active Customers' = SUM(CohortRetention[active_customers])
+		formatString: #,##0
+		displayFolder: Cohorts
+		lineageTag: 81fe1212-e550-59a2-b642-63219dfe1760
+
+	measure 'Cohort Size' = SUMX(VALUES(CohortRetention[cohort_month]), CALCULATE(MAX(CohortRetention[cohort_size])))
+		formatString: #,##0
+		displayFolder: Cohorts
+		lineageTag: 58ab9b1a-2f02-5413-a08d-2a15689425b7
+
+	measure 'Cohort Retention %' = IF(HASONEVALUE(CohortRetention[month_offset]), DIVIDE([Cohort Active Customers], [Cohort Size]))
+		formatString: 0.0%
+		displayFolder: Cohorts
+		lineageTag: 8ade21a2-049f-5637-879d-33e26c002385
+
+	measure 'Observed Month 1 Retention %' = CALCULATE([Cohort Retention %], CohortRetention[month_offset] = 1)
+		formatString: 0.00%
+		displayFolder: Cohorts
+		lineageTag: 7f29ee52-7125-5ed1-b389-11f5c04606ce
+
+	measure 'Average Delivery Days' = AVERAGE(FactOrders[delivery_days])
+		formatString: 0.00
+		displayFolder: Delivery
+		lineageTag: b3dbbdec-eb5b-5eda-9d65-11a60e659a9e
+
+	measure 'Eligible Delivered Orders' = CALCULATE([Orders], FactOrders[eligible_delivery] = TRUE())
+		formatString: #,##0
+		displayFolder: Delivery
+		lineageTag: e5b56ba2-211a-5614-bf24-5805114311e5
+
+	measure 'Late Orders' = CALCULATE([Orders], FactOrders[is_late] = TRUE())
+		formatString: #,##0
+		displayFolder: Delivery
+		lineageTag: 5bf34a32-ce5c-5741-9375-ed0035b2c3fb
+
+	measure 'Late Delivery %' = DIVIDE([Late Orders], [Eligible Delivered Orders])
+		formatString: 0.00%
+		displayFolder: Delivery
+		lineageTag: 5f51ff89-57b5-5a0c-a457-6ff8abd9e3b0
+
+	measure 'On Time Delivery %' = DIVIDE([Eligible Delivered Orders] - [Late Orders], [Eligible Delivered Orders])
+		formatString: 0.00%
+		displayFolder: Delivery
+		lineageTag: 1931641b-5922-5e5b-bdce-3bbf775ba574
+
+	measure 'Average Source Review Score' = DIVIDE(SUM(FactOrders[review_score_sum]), SUM(FactOrders[review_rows]))
+		formatString: 0.00
+		displayFolder: Delivery
+		lineageTag: ef3ac2b2-48b5-5281-a47f-37cd2ec48c0f
+
+	measure 'Average Reviewed Order Score' = AVERAGE(FactOrders[avg_order_review_score])
+		formatString: 0.00
+		displayFolder: Delivery
+		lineageTag: 397d4dfb-f476-5631-8c78-9869881236f7
+
+	measure 'Reviewed Orders' = COUNT(FactOrders[avg_order_review_score])
+		formatString: #,##0
+		displayFolder: Delivery
+		lineageTag: 97b573bd-11c5-541c-aa39-c17664cf20e0
+
+	measure 'Source Review Records' = COUNTROWS('public order_reviews')
+		formatString: #,##0
+		displayFolder: Delivery
+		lineageTag: a82c12bb-f4b5-5b7c-a118-9552ac927859
+
+	measure 'Average Freight per Item BRL' = AVERAGE(FactItems[freight_value])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Delivery
+		lineageTag: d527ea47-31e0-5c9f-8807-9bf7aa61f8e3
+
+	measure 'Average Delay Days' = AVERAGE(FactOrders[delay_days])
+		formatString: 0.0
+		displayFolder: Delivery
+		lineageTag: 2938efbc-84a9-5f1e-9be1-c9de917e5f1d
+
+	measure 'Seller Item Sales BRL' = SUM(FactSellerOrders[seller_item_sales_brl])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Sellers
+		lineageTag: eb37b07b-f9d1-5ae9-a85f-b24960e30c44
+
+	measure 'Seller Orders' = DISTINCTCOUNT(FactSellerOrders[order_id])
+		formatString: #,##0
+		displayFolder: Sellers
+		lineageTag: 7789aa34-d38d-5192-ad72-1f93ef67dffa
+
+	measure 'Seller Eligible Deliveries' = CALCULATE(DISTINCTCOUNT(FactSellerOrders[order_id]), FactSellerOrders[eligible_delivery] = TRUE())
+		formatString: #,##0
+		displayFolder: Sellers
+		lineageTag: 5fe12bbe-306a-57c4-b642-d1063ce0cb64
+
+	measure 'Seller Late Orders' = CALCULATE(DISTINCTCOUNT(FactSellerOrders[order_id]), FactSellerOrders[is_late] = TRUE())
+		formatString: #,##0
+		displayFolder: Sellers
+		lineageTag: 61a1738a-5e29-5ee3-980a-54fa6b0462f8
+
+	measure 'Seller Late %' = DIVIDE([Seller Late Orders], [Seller Eligible Deliveries])
+		formatString: 0.0%
+		displayFolder: Sellers
+		lineageTag: 072608e6-1c9e-53df-87df-dfd095113176
+
+	measure 'Seller Reviewed Order Score' = AVERAGE(FactSellerOrders[avg_order_review_score])
+		formatString: 0.00
+		displayFolder: Sellers
+		lineageTag: 6a1efa66-e9f6-5511-bbf8-5ac9af2aa7d3
+
+	measure 'Seller Sales Rank' = RANKX(ALLSELECTED(DimSeller), [Seller Item Sales BRL], , DESC, DENSE)
+		formatString: #,##0
+		displayFolder: Sellers
+		lineageTag: 605f867a-7855-52a4-b9a6-7932118d19fb
+
+	measure 'Top Seller Sales BRL' = IF([Seller Sales Rank] <= 10, [Seller Item Sales BRL])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Sellers
+		lineageTag: c8c6d34c-aeb5-5fe2-858e-3f19c8973bcb
+
+	measure 'Compared Seller Sales BRL' = IF([Seller Sales Rank] <= 20, [Seller Item Sales BRL])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Sellers
+		lineageTag: 765fd13c-ee02-5eb6-846f-96e7fcfaf375
+
+	measure 'Compared Seller Late %' = IF([Seller Sales Rank] <= 20, [Seller Late %])
+		formatString: 0.0%
+		displayFolder: Sellers
+		lineageTag: 96b82692-1068-5970-b402-db81bb8f5570
+
+	measure 'Compared Seller Orders' = IF([Seller Sales Rank] <= 20, [Seller Orders])
+		formatString: #,##0
+		displayFolder: Sellers
+		lineageTag: c4950b3a-9ddb-5ae8-aab9-ca8caf9f4ab4
+
+	measure 'Top State Item Sales BRL' = VAR StateRank = RANKX(ALLSELECTED(DimCustomerState[customer_state]), [Item Sales BRL], , DESC, DENSE) RETURN IF(StateRank <= 10, [Item Sales BRL])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Overview
+		lineageTag: 74e3f26c-6475-5bb6-ae53-b51188c3fd58
+
+	measure 'Top State Customers' = VAR StateRank = RANKX(ALLSELECTED(DimCustomerState[customer_state]), [Customers], , DESC, DENSE) RETURN IF(StateRank <= 10, [Customers])
+		formatString: #,##0
+		displayFolder: Customers
+		lineageTag: 5f82134d-bf97-5211-beb4-b3252bf7afe5
+
+	measure 'Top State Late Delivery %' = VAR StateRank = RANKX(ALLSELECTED(DimCustomerState[customer_state]), [Late Delivery %], , DESC, DENSE) RETURN IF(StateRank <= 10, [Late Delivery %])
+		formatString: 0.00%
+		displayFolder: Delivery
+		lineageTag: 22c5d291-be0b-568c-8ade-78a2c4ff07be
+
+	measure 'Top State Freight per Item BRL' = VAR StateRank = RANKX(ALLSELECTED(DimCustomerState[customer_state]), [Average Freight per Item BRL], , DESC, DENSE) RETURN IF(StateRank <= 10, [Average Freight per Item BRL])
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+		displayFolder: Delivery
+		lineageTag: 511272bc-9525-5441-99c5-31e79e306f20
+
+	column Value
+		dataType: int64
+		isHidden
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Value]
+
+	partition Metrics = calculated
+		mode: import
+		source = {0}

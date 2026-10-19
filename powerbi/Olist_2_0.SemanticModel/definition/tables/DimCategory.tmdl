@@ -1,0 +1,53 @@
+table DimCategory
+	lineageTag: f1f01c19-6fa0-5c26-a9e1-c0232fb11ea6
+
+	column category_key
+		dataType: string
+		lineageTag: d82b0c96-2fb2-5011-865e-19f8fdae4b35
+		summarizeBy: none
+		sourceColumn: category_key
+
+	column product_category_name
+		dataType: string
+		lineageTag: d15086d2-2252-5211-aad2-354e648edf90
+		summarizeBy: none
+		sourceColumn: product_category_name
+
+	column product_category_name_english
+		dataType: string
+		lineageTag: ea3ff38e-b6ae-549a-b179-bdb1ed8438fb
+		summarizeBy: none
+		sourceColumn: product_category_name_english
+
+	column category_label
+		dataType: string
+		lineageTag: 9c332532-2e7a-5709-9376-32022993cdd2
+		summarizeBy: none
+		sourceColumn: category_label
+
+	column is_missing_category
+		dataType: boolean
+		lineageTag: d86a161f-e08f-5130-aef7-13b58196b76a
+		summarizeBy: none
+		sourceColumn: is_missing_category
+
+	column is_untranslated_category
+		dataType: boolean
+		lineageTag: 540d9e65-1609-5f26-a19e-2a3931977e3c
+		summarizeBy: none
+		sourceColumn: is_untranslated_category
+
+	column 'Category' = SUBSTITUTE(DimCategory[category_label], "_", " ")
+		dataType: string
+		summarizeBy: none
+
+	partition DimCategory = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    View = Source{[Schema="olist_analytics", Item="v_categories"]}[Data]
+				in
+				    View
+
+	annotation PBI_ResultType = Table

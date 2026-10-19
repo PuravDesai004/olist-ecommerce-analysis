@@ -1,0 +1,134 @@
+table DimCustomer
+	lineageTag: 282aa162-cf27-5bf8-8a3e-36082425a09a
+
+	column customer_unique_id
+		dataType: string
+		lineageTag: 5591247b-6a2f-5664-b38d-95c905654595
+		summarizeBy: none
+		sourceColumn: customer_unique_id
+
+	column first_purchase_date
+		dataType: dateTime
+		lineageTag: 6a11b219-2501-599f-9cbb-c7afac78c8e5
+		summarizeBy: none
+		sourceColumn: first_purchase_date
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column last_purchase_date
+		dataType: dateTime
+		lineageTag: a1cb1900-176b-5748-afd6-ee87ddc29a4f
+		summarizeBy: none
+		sourceColumn: last_purchase_date
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column lifetime_orders
+		dataType: int64
+		lineageTag: 0a4854f5-ad28-5c7e-9102-b9700d66071e
+		summarizeBy: none
+		sourceColumn: lifetime_orders
+
+	column lifetime_paid_orders
+		dataType: int64
+		lineageTag: 327a9456-41cc-5639-bf4d-dffb9a09ed39
+		summarizeBy: none
+		sourceColumn: lifetime_paid_orders
+
+	column lifetime_item_sales_brl
+		dataType: decimal
+		lineageTag: d8196021-a3e5-5610-84f8-c81491d9391f
+		summarizeBy: none
+		sourceColumn: lifetime_item_sales_brl
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+
+	column lifetime_payment_value_brl
+		dataType: decimal
+		lineageTag: 422110b3-a8b2-5eff-8354-c54fd66bc4db
+		summarizeBy: none
+		sourceColumn: lifetime_payment_value_brl
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+
+	column acquisition_month
+		dataType: dateTime
+		lineageTag: dc96f055-4c1e-5786-91d6-e5a15ea3ed98
+		summarizeBy: none
+		sourceColumn: acquisition_month
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column is_repeat_customer
+		dataType: boolean
+		lineageTag: 56a7f2f9-84e8-5866-af71-2d03cfc30b62
+		summarizeBy: none
+		sourceColumn: is_repeat_customer
+
+	column reference_date
+		dataType: dateTime
+		lineageTag: ff0e16fd-8597-5158-9c45-c433fc589ed8
+		summarizeBy: none
+		sourceColumn: reference_date
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column recency_days
+		dataType: int64
+		lineageTag: 80483e34-deee-5f90-9e44-f6bb836d107f
+		summarizeBy: none
+		sourceColumn: recency_days
+
+	column rfm_frequency
+		dataType: int64
+		lineageTag: aaa74c93-6c89-568c-88c5-02ee65b61db5
+		summarizeBy: none
+		sourceColumn: rfm_frequency
+
+	column rfm_monetary_brl
+		dataType: decimal
+		lineageTag: c843c482-ed23-5f62-adfc-788d6b0f7f54
+		summarizeBy: none
+		sourceColumn: rfm_monetary_brl
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+
+	column r_score
+		dataType: int64
+		lineageTag: 42f70168-2139-559f-af9a-ee9c3f607718
+		summarizeBy: none
+		sourceColumn: r_score
+
+	column f_score
+		dataType: int64
+		lineageTag: 7957ebd8-8645-5f4a-ada2-c8d22410fc50
+		summarizeBy: none
+		sourceColumn: f_score
+
+	column m_score
+		dataType: int64
+		lineageTag: 6436d44b-8d2e-5f7f-9194-e22fcf5398ca
+		summarizeBy: none
+		sourceColumn: m_score
+
+	column rfm_segment
+		dataType: string
+		lineageTag: d2027f08-5853-553b-a1d2-a0ff3f5e07b9
+		summarizeBy: none
+		sourceColumn: rfm_segment
+
+	column 'Purchase history' = IF(DimCustomer[is_repeat_customer], "Repeat buyer", "One-time buyer")
+		dataType: string
+		summarizeBy: none
+
+	partition DimCustomer = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    View = Source{[Schema="olist_analytics", Item="v_customers"]}[Data]
+				in
+				    View
+
+	annotation PBI_ResultType = Table

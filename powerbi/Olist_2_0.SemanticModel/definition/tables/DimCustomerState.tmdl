@@ -1,0 +1,20 @@
+table DimCustomerState
+	lineageTag: 45faefd9-55af-579e-b930-062a90524d75
+
+	column customer_state
+		dataType: string
+		lineageTag: b057664c-2da8-54fa-8456-bc03d54bef6b
+		summarizeBy: none
+		sourceColumn: customer_state
+		dataCategory: StateOrProvince
+
+	partition DimCustomerState = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    View = Source{[Schema="olist_analytics", Item="v_customer_states"]}[Data]
+				in
+				    View
+
+	annotation PBI_ResultType = Table

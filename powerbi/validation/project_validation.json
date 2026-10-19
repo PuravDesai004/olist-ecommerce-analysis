@@ -1,0 +1,8 @@
+{
+  "status": "PASS",
+  "schema_documents_checked": 62,
+  "visuals": 57,
+  "measures": 52,
+  "errors": [],
+  "limitation": "Desktop processing, DAX results and interaction checks are separate required checks."
+}

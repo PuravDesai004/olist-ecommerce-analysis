@@ -1,10 +1,12 @@
-# Olist 2.0 - manual Power BI handoff
+# Olist 2.0 - Power BI model and learning guide
 
 The reporting contract is defined in sql/05_reporting_views.sql. The historical
 execution record in sql/verification_results.json covers release 2097d69; follow
-the README's manual SQL checks to verify the current database. No Power BI model,
-DAX measure or dashboard has been executed in Desktop. The original screenshots
-and dashboard PDF are Olist 1.0 artifacts.
+the README's manual SQL checks to verify the current database. The completed
+three-page dashboard and 73/73 passing Desktop DAX checks are documented in
+[powerbi/README.md](powerbi/README.md). This guide preserves the original model
+contract, learning examples and design ideas. The original root JPGs and
+olist_dashboard.pdf remain Olist 1.0 artifacts; Olist_2_0.pdf is the current export.
 
 ## First connection
 
@@ -103,9 +105,10 @@ on DimProduct when using the conformed DimCategory slicer.
 
 ## DAX examples for this exact model
 
-These definitions are justified by the view contract but have not been run in
-Desktop. Adapt table names only if you choose different query aliases, then
-validate every measure. SQL results do not prove Desktop relationships or DAX.
+These are teaching examples from the view contract. The exact implemented
+definitions are in powerbi/Olist_2_0.SemanticModel/definition/tables/Metrics.tmdl;
+use those definitions when reproducing the completed dashboard. Native Desktop
+checks are retained separately because SQL results alone do not prove DAX.
 
 ### Executive measures
 
@@ -271,7 +274,10 @@ The shipping-deadline measure uses the order-level carrier timestamp against the
 seller's earliest item deadline; it cannot isolate which seller caused a delay.
 The SQL monitoring floor of 30 eligible deliveries is practical, not a significance test.
 
-## Three pages to build manually
+## Original three-page design reference
+
+The following design ideas are retained for learning and future extensions.
+For the visuals actually delivered and their filter boundaries, see powerbi/README.md.
 
 ### Executive Overview
 
@@ -315,7 +321,7 @@ interaction implying an allocation of order payments.
 6. Check BLANK versus zero, future cohort cells and entity totals. Distinct order
    counts are not sums of category/seller order counts.
 
-The SQL suite proves the backend contract only. Desktop relationships, DAX,
-visuals, refresh and interactions remain your manual work. After verification,
-save the new .pbix locally, add genuine Olist 2.0 screenshots and update the
-README status. Keep historical images clearly labeled Olist 1.0.
+The SQL suite proves the backend contract. The completed report additionally
+passed 73 native Desktop DAX checks and the recorded month, RFM, seller-state,
+navigation and PDF checks. Repeat the acceptance checks after changing the
+model or refreshing against different data. Historical images remain labeled Olist 1.0.

@@ -1,0 +1,42 @@
+table DimSeller
+	lineageTag: 606f131a-32d7-5f2f-990b-85db57e1bd12
+
+	column seller_id
+		dataType: string
+		lineageTag: 240b216b-7546-58f1-aa94-6f36ed0fcbcf
+		summarizeBy: none
+		sourceColumn: seller_id
+
+	column seller_zip_code_prefix
+		dataType: string
+		lineageTag: e90a18b3-fea2-52ed-a3a9-3b362a34abb2
+		summarizeBy: none
+		sourceColumn: seller_zip_code_prefix
+
+	column seller_city
+		dataType: string
+		lineageTag: 0d38bd56-6b29-5943-b506-4134483f950b
+		summarizeBy: none
+		sourceColumn: seller_city
+
+	column seller_state
+		dataType: string
+		lineageTag: 19552f0f-0824-56f1-b060-1150c0d59d76
+		summarizeBy: none
+		sourceColumn: seller_state
+		dataCategory: StateOrProvince
+
+	column 'Seller label' = LEFT(DimSeller[seller_id], 8) & "..." & RIGHT(DimSeller[seller_id], 4)
+		dataType: string
+		summarizeBy: none
+
+	partition DimSeller = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    View = Source{[Schema="olist_analytics", Item="v_sellers"]}[Data]
+				in
+				    View
+
+	annotation PBI_ResultType = Table

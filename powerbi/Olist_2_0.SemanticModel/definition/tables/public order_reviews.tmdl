@@ -1,0 +1,84 @@
+table 'public order_reviews'
+	isHidden
+	lineageTag: bf32f17e-543f-441d-9b3e-3bc0a0567174
+
+	column review_id
+		dataType: string
+		lineageTag: 799db1b8-9245-4924-904c-07b583b9e833
+		summarizeBy: none
+		sourceColumn: review_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_id
+		dataType: string
+		lineageTag: 957684be-fb7b-4e33-bb84-afcde6773277
+		summarizeBy: none
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column review_score
+		dataType: int64
+		formatString: 0
+		lineageTag: 9746b19e-ad06-463b-adbb-6cdca706201b
+		summarizeBy: sum
+		sourceColumn: review_score
+
+		annotation SummarizationSetBy = Automatic
+
+	column review_comment_title
+		dataType: string
+		lineageTag: 47b68158-81c5-4cc9-89b1-8bcfe35bf72d
+		summarizeBy: none
+		sourceColumn: review_comment_title
+
+		annotation SummarizationSetBy = Automatic
+
+	column review_comment_message
+		dataType: string
+		lineageTag: ba4c6cad-da21-4464-b4a1-14d8881bbac7
+		summarizeBy: none
+		sourceColumn: review_comment_message
+
+		annotation SummarizationSetBy = Automatic
+
+	column review_creation_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: dfd396a0-7967-4df5-92dc-4544517dea1d
+		summarizeBy: none
+		sourceColumn: review_creation_date
+
+		variation Variation
+			isDefault
+			relationship: 5b5afb9b-df84-4679-8cc8-44e04b8d5255
+			defaultHierarchy: LocalDateTable_d5761a3e-82a7-4ec1-a5ce-8151577090a2.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column review_answer_timestamp
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 72b27848-bd0a-4086-ae26-e2ca59e0ea82
+		summarizeBy: none
+		sourceColumn: review_answer_timestamp
+
+		variation Variation
+			isDefault
+			relationship: a25d1748-b3d2-46f9-a85f-bc1006ba93e6
+			defaultHierarchy: LocalDateTable_99bf4386-3c21-4b82-8924-96deaf7bad9b.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'public order_reviews' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    public_order_reviews = Source{[Schema="public",Item="order_reviews"]}[Data]
+				in
+				    public_order_reviews
+
+	annotation PBI_ResultType = Table
+

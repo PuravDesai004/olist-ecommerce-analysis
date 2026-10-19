@@ -1,0 +1,94 @@
+table 'public products'
+	isHidden
+	lineageTag: ef444da0-4538-4570-b6c2-22796afd3009
+
+	column product_id
+		dataType: string
+		lineageTag: 4df39c8d-6329-4d07-810f-097107d7d308
+		summarizeBy: none
+		sourceColumn: product_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_category_name
+		dataType: string
+		lineageTag: 9e291bf2-c024-4377-bc23-e85a97d7c303
+		summarizeBy: none
+		sourceColumn: product_category_name
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_name_lenght
+		dataType: int64
+		formatString: 0
+		lineageTag: ec6a1a2a-feaa-4bdc-85f3-082d27ef46ef
+		summarizeBy: none
+		sourceColumn: product_name_lenght
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_description_lenght
+		dataType: int64
+		formatString: 0
+		lineageTag: 5969826b-89e5-42f8-bb6f-a746f8c74eda
+		summarizeBy: none
+		sourceColumn: product_description_lenght
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_photos_qty
+		dataType: int64
+		formatString: 0
+		lineageTag: 2affda18-b9cb-44e9-814c-818efc92316e
+		summarizeBy: none
+		sourceColumn: product_photos_qty
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_weight_g
+		dataType: int64
+		formatString: 0
+		lineageTag: 448868e9-2c19-42d3-9a36-ace8ae6e3f05
+		summarizeBy: none
+		sourceColumn: product_weight_g
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_length_cm
+		dataType: int64
+		formatString: 0
+		lineageTag: 1b690646-9777-46e7-bb84-87b4abbff4d6
+		summarizeBy: none
+		sourceColumn: product_length_cm
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_height_cm
+		dataType: int64
+		formatString: 0
+		lineageTag: 6748e9a9-80ae-443b-9ce0-45a89a23ea16
+		summarizeBy: none
+		sourceColumn: product_height_cm
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_width_cm
+		dataType: int64
+		formatString: 0
+		lineageTag: 0dbe39d5-74ae-489a-91d4-1777a7972b21
+		summarizeBy: none
+		sourceColumn: product_width_cm
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'public products' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    public_products = Source{[Schema="public",Item="products"]}[Data]
+				in
+				    public_products
+
+	annotation PBI_ResultType = Table
+

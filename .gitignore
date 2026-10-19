@@ -48,5 +48,7 @@ desktop.ini
 /output/
 /tmp/
 
-# Manual Power BI work is outside this SQL release; unignore when ready to publish.
-/olist_2_0.pbix
+# Power BI local caches and user-specific settings stay local.
+**/.pbi/
+*.pbix.lock
+*.pbip.lock

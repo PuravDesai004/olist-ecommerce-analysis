@@ -1,0 +1,82 @@
+table 'public order_items'
+	isHidden
+	lineageTag: 6c4755e1-47b0-4730-ac93-09905bbb41f0
+
+	column order_id
+		dataType: string
+		lineageTag: a1e004d5-da36-418f-8f68-11a7b42fb637
+		summarizeBy: none
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_item_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 4d2cc295-d3dd-4861-b623-96c6a3d5d0c7
+		summarizeBy: sum
+		sourceColumn: order_item_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_id
+		dataType: string
+		lineageTag: 0d2bf5ca-e84e-4896-882e-99d7e2c384ff
+		summarizeBy: none
+		sourceColumn: product_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column seller_id
+		dataType: string
+		lineageTag: b38741b7-ecaa-4b2e-8331-b112aa76aef6
+		summarizeBy: none
+		sourceColumn: seller_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column shipping_limit_date
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e449d05d-7ae7-48e6-bc66-aff6cfa9acdf
+		summarizeBy: none
+		sourceColumn: shipping_limit_date
+
+		variation Variation
+			isDefault
+			relationship: 75532dd9-a177-4531-94ac-8fe47a29eb99
+			defaultHierarchy: LocalDateTable_69467eab-56d0-4eb1-8d45-614b6eec29cb.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column price
+		dataType: double
+		lineageTag: 0ed0eebc-e494-4080-a930-4c5790f55844
+		summarizeBy: sum
+		sourceColumn: price
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column freight_value
+		dataType: double
+		lineageTag: 6425ab81-7514-4018-a64a-e2e3506c4d90
+		summarizeBy: sum
+		sourceColumn: freight_value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'public order_items' = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    public_order_items = Source{[Schema="public",Item="order_items"]}[Data]
+				in
+				    public_order_items
+
+	annotation PBI_ResultType = Table
+

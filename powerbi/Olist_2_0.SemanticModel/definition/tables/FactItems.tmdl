@@ -1,0 +1,114 @@
+table FactItems
+	lineageTag: 45459370-97bc-5223-b6d9-7d32b7d42959
+
+	column order_id
+		dataType: string
+		lineageTag: 94feda7e-9d76-5e9a-b625-b38ad8ccf083
+		summarizeBy: none
+		sourceColumn: order_id
+
+	column order_item_id
+		dataType: int64
+		lineageTag: f8215c3a-7992-5e3e-9a15-eec38f552868
+		summarizeBy: none
+		sourceColumn: order_item_id
+
+	column product_id
+		dataType: string
+		lineageTag: 9890d5e2-f6b0-5805-b110-34f91dcb9824
+		summarizeBy: none
+		sourceColumn: product_id
+
+	column seller_id
+		dataType: string
+		lineageTag: c0c7ee48-b7b2-54ef-991b-a58275c5ac9f
+		summarizeBy: none
+		sourceColumn: seller_id
+
+	column shipping_limit_date
+		dataType: dateTime
+		lineageTag: 905588b3-e6b4-5e26-82d5-b6ac08f26738
+		summarizeBy: none
+		sourceColumn: shipping_limit_date
+		formatString: dd MMM yyyy
+
+		variation Variation
+			isDefault
+			relationship: 5f9517ba-92aa-46ae-b828-4fa890e09500
+			defaultHierarchy: LocalDateTable_437e12d4-6da0-49cc-a685-3f8f07a6c72a.'Date Hierarchy'
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column price
+		dataType: decimal
+		lineageTag: e9afecf1-c457-5af0-84bc-da461050d566
+		summarizeBy: none
+		sourceColumn: price
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+
+	column freight_value
+		dataType: decimal
+		lineageTag: 7d3de0df-e2c2-519e-af87-6574d99e455a
+		summarizeBy: none
+		sourceColumn: freight_value
+		formatString: "R$" #,##0.00;("R$" #,##0.00);"R$" 0.00
+
+	column customer_id
+		dataType: string
+		lineageTag: 352e3115-dc4c-5de2-9d96-a4a52a65afdd
+		summarizeBy: none
+		sourceColumn: customer_id
+
+	column customer_unique_id
+		dataType: string
+		lineageTag: a184252a-4118-56d2-8773-5e68958c7e20
+		summarizeBy: none
+		sourceColumn: customer_unique_id
+
+	column customer_state
+		dataType: string
+		lineageTag: 93c115bd-05ae-5c49-b007-93987d31ee4f
+		summarizeBy: none
+		sourceColumn: customer_state
+		dataCategory: StateOrProvince
+
+	column order_status
+		dataType: string
+		lineageTag: d06fb510-eca8-52b6-a6b2-7d0d34d59a98
+		summarizeBy: none
+		sourceColumn: order_status
+
+	column purchase_date
+		dataType: dateTime
+		lineageTag: f0c71d60-17c6-5960-9016-088395e0f7f6
+		summarizeBy: none
+		sourceColumn: purchase_date
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column purchase_month
+		dataType: dateTime
+		lineageTag: f8e4c00b-ce22-5df5-bd34-d2b6370f0a79
+		summarizeBy: none
+		sourceColumn: purchase_month
+		formatString: dd MMM yyyy
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column category_key
+		dataType: string
+		lineageTag: 14c076a8-20bc-588c-b245-ef29866d5b40
+		summarizeBy: none
+		sourceColumn: category_key
+
+	partition FactItems = m
+		mode: import
+		source =
+				let
+				    Source = PostgreSQL.Database("localhost:5432", "olist2"),
+				    View = Source{[Schema="olist_analytics", Item="v_items"]}[Data]
+				in
+				    View
+
+	annotation PBI_ResultType = Table

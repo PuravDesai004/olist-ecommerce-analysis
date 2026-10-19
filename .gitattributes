@@ -6,3 +6,4 @@
 .gitattributes text eol=lf
 *.jpg binary
 *.pdf binary
+/olist_2_0.pbix filter=lfs diff=lfs merge=lfs -text
