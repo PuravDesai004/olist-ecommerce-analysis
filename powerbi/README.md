@@ -55,4 +55,4 @@ Desktop interaction checks exercised November 2017, the High value active segmen
 4. Refresh in Desktop, rerun the included DAX checks in DAX query view, and repeat relevant filter checks if data or definitions change.
 5. For source editing, open `Olist_2_0.pbip`. The cache is intentionally excluded, so a source checkout needs a refresh. Keep `.pbi/` local. The saved PBIX remains the portable snapshot.
 
-The original Olist 1.0 images/PDF and the `olist-1.0` Git branch are preserved. The old model-design guide includes ideas for future extensions; this README describes the delivered report.
+The original Olist 1.0 images/PDF are preserved on the `olist-1.0` Git branch. The model-design guide includes learning examples and ideas for future extensions; this README describes the delivered report. Scratch DAX queries, temporary projects, caches and backup copies have been removed; validation/validate_final.dax is the canonical verification query.

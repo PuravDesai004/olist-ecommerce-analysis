@@ -5,8 +5,8 @@ execution record in sql/verification_results.json covers release 2097d69; follow
 the README's manual SQL checks to verify the current database. The completed
 three-page dashboard and 73/73 passing Desktop DAX checks are documented in
 [powerbi/README.md](powerbi/README.md). This guide preserves the original model
-contract, learning examples and design ideas. The original root JPGs and
-olist_dashboard.pdf remain Olist 1.0 artifacts; Olist_2_0.pdf is the current export.
+contract, learning examples and design ideas. Original Olist 1.0 dashboard assets
+are preserved on the olist-1.0 branch; Olist_2_0.pdf is the current export.
 
 ## First connection
 

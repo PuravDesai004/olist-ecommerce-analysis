@@ -244,9 +244,6 @@ and [the executed DAX summary](powerbi/validation/desktop_final_validation_summa
 README.md
 POWER_BI_GUIDE.md
 olist_queries.sql
-overview_page.jpg              # genuine legacy Deep Dive
-deep_dive_page.jpg             # genuine legacy Overview
-olist_dashboard.pdf           # genuine legacy dashboard export
 olist_2_0.pbix                # completed Olist 2.0 dashboard; Git LFS
 Olist_2_0.pdf                 # current three-page Desktop export
 powerbi/                      # editable PBIP source, previews and validation
@@ -261,28 +258,19 @@ sql/
   verification_results.json
 ~~~
 
-The previously requested learning workbook is preserved locally under ignored
-output/. It is a teaching artifact, not the new dashboard. No raw datasets,
-password files, environments or caches belong in Git.
+The learning workbook is preserved separately in Downloads. Temporary builds,
+backup copies and export review files have been removed from the project.
+Raw datasets, password files, environments and caches do not belong in Git.
 The completed olist_2_0.pbix is versioned through Git LFS because it exceeds
 GitHub's normal file-size limit. Use the file's Download button or clone with
 Git LFS installed to obtain the full report. Desktop caches and backups remain local.
 
-## Original Olist 1.0 dashboard - legacy evidence
+## Original Olist 1.0 dashboard
 
-These are genuine historical screenshots, not Olist 2.0 visuals. Their displayed
-labels and rounded figures follow the original implementation and may differ
-from the improved definitions above. Filenames are kept intact.
-
-### Legacy Overview
-
-![Olist 1.0 legacy Overview](deep_dive_page.jpg)
-
-### Legacy Deep Dive
-
-![Olist 1.0 legacy Deep Dive](overview_page.jpg)
-
-[Original dashboard PDF export](olist_dashboard.pdf)
+The original SQL, README, screenshots and dashboard PDF are preserved on the
+[olist-1.0 branch](https://github.com/PuravDesai004/olist-ecommerce-analysis/tree/olist-1.0).
+Historical labels and rounded values may differ from the improved definitions
+in the current project. The main branch contains the current dashboard assets.
 
 ## Olist 2.0 dashboard
 
