@@ -1,13 +1,14 @@
 # Olist 2.0 - manual Power BI handoff
 
-The reporting contract is defined in sql/05_reporting_views.sql. Check
-sql/verification_results.json to establish whether the current SQL revision has
-passed execution. No Power BI model, DAX measure or dashboard has been executed
-in Desktop. The original screenshots and dashboard PDF are Olist 1.0 artifacts.
+The reporting contract is defined in sql/05_reporting_views.sql. The historical
+execution record in sql/verification_results.json covers release 2097d69; follow
+the README's manual SQL checks to verify the current database. No Power BI model,
+DAX measure or dashboard has been executed in Desktop. The original screenshots
+and dashboard PDF are Olist 1.0 artifacts.
 
 ## First connection
 
-1. Complete the SQL verification command in the README.
+1. Complete the manual SQL verification steps in the README.
 2. Open Power BI Desktop yourself. Choose **Home > Get data > PostgreSQL database**.
 3. Enter server **localhost:5432**, database **olist2**, and select **Import**.
 4. Choose Database authentication, username **postgres**, and enter the password

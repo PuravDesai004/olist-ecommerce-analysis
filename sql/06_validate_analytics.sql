@@ -1,6 +1,6 @@
--- Evidence writes are atomic; source anomalies remain explicit assertions.
--- Olist 2.0 executable quality gates. Read-only; scripts/run_project.py fails
--- if ANY row is FAIL, NULL, or missing. Fixed baseline assertions verify this
+-- Olist 2.0 executable quality gates. Read-only; inspect every returned row.
+-- Require all 119 rows to be PASS; FAIL/NULL rows are not SQL execution errors.
+-- Source anomalies remain explicit assertions. Fixed baseline checks verify this
 -- historical snapshot; calculated measures are never forced to these values.
 WITH
 o AS MATERIALIZED (SELECT * FROM olist_analytics.v_orders),

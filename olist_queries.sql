@@ -1,6 +1,6 @@
 -- Olist 2.0 | PostgreSQL analysis | database: olist2
 -- Prerequisite: sql/05_reporting_views.sql. Sources remain unchanged.
--- Original 29 queries are individually audited from Git by scripts/run_project.py.
+-- Original 29-query audit is recorded in sql/verification_results.json.
 -- Consolidations: B1+B6+I5 -> Q01; B3+I6 -> Q03. Other original analyses retained.
 -- Nominal BRL: item sales=price, freight and payments are separate. All statuses
 -- unless stated. No profit inferred; review/delivery associations are not causal.

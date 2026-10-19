@@ -6,8 +6,8 @@ reporting layer, advanced business analyses and a documented model for a future
 Power BI dashboard.
 
 **Stack:** PostgreSQL 18, advanced SQL, Power BI preparation, Git.
-Python's standard library handles source auditing and reproducible verification;
-the analytical engine remains PostgreSQL.
+PostgreSQL handles the analysis and SQL validation. Setup and verification use
+SQL files directly through psql or pgAdmin.
 
 **Dashboard status:** Olist 2.0's Power BI dashboard is intentionally unfinished.
 I will connect, model, implement DAX and build the three pages manually.
@@ -31,10 +31,13 @@ development branch.
 
 The evidence comes from executed PostgreSQL queries in
 [olist_queries.sql](olist_queries.sql); query IDs below identify the exact SQL.
-The current run's timestamps, query hashes, row counts, result samples, legacy
+The recorded run's timestamps, query hashes, row counts, result samples, legacy
 errors and PASS/FAIL gates are retained in
 [verification_results.json](sql/verification_results.json).
-The execution report must have status PASS and hashes matching the SQL files.
+This historical execution record belongs to release
+[2097d69](https://github.com/PuravDesai004/olist-ecommerce-analysis/tree/2097d69dc2926d01ee35d0cba1db44283bdb5714).
+Its file hashes refer to that release. Subsequent removal of the Python utilities
+and updates to SQL header comments do not represent a new database verification.
 The full run on **19 October 2026** passed **119 SQL gates**, executed **38
 analyses**, deployed **15 views** and passed the nine-file streaming CSV audit.
 Before/after fingerprints confirmed unchanged source tables and CSV files.
@@ -121,8 +124,9 @@ numeric values drive calculations; rounding is deferred to display.
 
 ### What changed from the original 29 queries
 
-Every original statement is executed from historical Git revision c113389
-against the current source schema and its actual error is recorded. All 29
+Every original statement was executed from historical Git revision c113389
+against the source schema during the recorded run, and its actual error was
+recorded. All 29
 needed current field names; the detailed audit remains in the evidence JSON.
 Corrections include:
 
@@ -143,66 +147,62 @@ Git history retains the original SQL; no duplicate legacy SQL file is necessary.
 
 ## Reproduce and verify
 
-Requires an existing local PostgreSQL service, psql and Python 3.10+.
-No third-party Python package, Docker or new analytics stack is required.
+Requires a local PostgreSQL service and psql or pgAdmin. The Python utilities
+have been removed; run the SQL files manually.
 
 ### Existing populated olist2 database
 
-Run from this project folder in your own PowerShell terminal:
+The populated project database already has its reporting views. From this
+project folder in PowerShell, run the read-only checks and analyses:
 
 ~~~powershell
-python scripts/run_project.py --prompt-password
+& 'C:\Program Files\PostgreSQL\18\bin\psql.exe' -X -W -h localhost -p 5432 -U postgres -d olist2 -P pager=off -v ON_ERROR_STOP=1 -f sql/03_validate_import.sql -f sql/04_validate_metrics.sql -f sql/06_validate_analytics.sql -f olist_queries.sql
 ~~~
 
-The hidden local prompt uses the password only for this process. Alternatively
-use an already configured standard libpq passfile/environment mechanism and omit
-the flag. Credentials are never accepted as command-line arguments or written
-to the evidence file. If psql is elsewhere, pass --psql with its executable path.
+Enter the password at psql's hidden prompt. Adjust the executable path if your
+installation differs. Alternatively, open each SQL file in pgAdmin's Query Tool
+connected to olist2 and execute them in the same order.
 
-The runner:
+SQL errors stop psql because ON_ERROR_STOP is enabled. A returned FAIL row does
+not cause a psql error: inspect all **119** rows from 06_validate_analytics.sql
+and require PASS for each. Missing rows, NULL results or FAIL results require
+investigation. The earlier validation files also display known source anomalies;
+compare them with the preserved execution record and data limitations below.
 
-1. Inspects actual source columns, constraints, project objects and dependencies.
-2. Fingerprints every source table and CSV before changes.
-3. Audits all 29 original statements individually in read-only transactions.
-4. Creates/replaces only project-owned analytical views in one transaction.
-5. Runs all SQL assertions and every revised analysis against PostgreSQL.
-6. Reruns Phase 1 validation and the streaming CSV audit.
-7. Verifies unchanged source/CSV fingerprints and writes one compact evidence file.
-
-Errors stop verification. A PASS requires every gate; skipping the CSV audit
-produces PARTIAL. Known source anomalies have explicit preservation checks.
-
-The runner refuses unrecognized objects or external downstream dependencies in
-the analytical schema. It never drops or truncates tables, edits source records
-or silently replaces incompatible views. Source import scripts are not rerun.
+These commands do not recreate views, import source data or update the historical
+JSON record. Before manually applying future changes to 05_reporting_views.sql,
+inspect existing objects and dependencies in olist_analytics in pgAdmin; the
+removed automation's catalog checks no longer run automatically.
 
 ### Fresh local reproduction
 
-1. Download the nine CSVs and install/configure PostgreSQL and Python yourself.
+1. Download the nine CSVs and install/configure PostgreSQL yourself.
 2. Create an empty olist2 database manually.
 3. Run sql/01_create_tables.sql once against that empty database.
 4. In sql/02_import_data.sql, adjust the CSV paths if your checkout differs.
    Run it through psql (its client-side copy commands do not run in pgAdmin).
    It imports only when all nine tables are empty, skips complete counts and
    stops on a partial population.
-5. Run the verification command above.
+5. Inspect the olist_analytics schema for existing objects and dependencies.
+   For a fresh project database, run sql/05_reporting_views.sql to create the
+   reporting layer. Review any existing objects before replacing views.
+6. Run the verification command above and review every result.
 
-For CSV-only auditing: python scripts/audit_olist_dataset.py.
-For the runner's SQL splitter/mapping checks: python scripts/run_project.py --self-test.
 Do not run the create-tables script on this already populated project database.
 
 ### Validation scope
 
-The suite checks source counts/keys/FKs, all view grains and coverage, independent
+The SQL checks cover source counts/keys/FKs, all view grains and coverage, independent
 financial sums, AOV, weighted reviews, monthly growth/running totals, person
 identity, RFM eligibility/coverage, raw-data cohort activity, seller/category
 rollups, conformed dimensions and preservation of source anomalies.
 
-The source-table fingerprints compare row counts and order-independent
-PostgreSQL row-hash sums before/after the run; CSV SHA-256 hashes compare the
-actual files. They verify preservation in this run, not proof of every possible
-future data change. Assertions and raw reconciliations provide the complementary
-semantic checks.
+The historical run additionally compared source-table row counts and
+order-independent PostgreSQL row-hash sums, plus CSV SHA-256 hashes, before and
+after execution. Its streaming CSV audit and preservation fingerprints are
+retained as past evidence; the manual SQL commands do not repeat those file
+checks or the historical 29-query audit. SQL assertions and raw reconciliations
+check the currently stored data and reporting views.
 
 These are SQL/backend checks. Power BI relationships, DAX evaluation, refresh
 and visuals remain manual acceptance work; follow POWER_BI_GUIDE.md.
@@ -246,9 +246,6 @@ overview_page.jpg              # genuine legacy Deep Dive
 deep_dive_page.jpg             # genuine legacy Overview
 olist_dashboard.pdf           # genuine legacy dashboard export
 data/raw/                     # nine local CSVs; ignored
-scripts/
-  audit_olist_dataset.py
-  run_project.py
 sql/
   01_create_tables.sql
   02_import_data.sql

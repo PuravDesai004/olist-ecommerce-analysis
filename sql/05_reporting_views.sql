@@ -1,5 +1,5 @@
 -- Olist 2.0 reporting layer. Source tables and records are never changed.
--- Run with scripts/run_project.py after its catalog/dependency preflight.
+-- Inspect existing analytical objects and dependencies before executing this file.
 -- All money is nominal BRL. Item sales exclude freight; payments are separate.
 BEGIN;
 SET LOCAL lock_timeout = '5s';
